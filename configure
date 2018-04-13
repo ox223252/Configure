@@ -384,7 +384,7 @@ mrproper: clean cleanDump cleanDoc
 
 empty: mrproper
 	@echo \"#!/bin/bash\" > script.sh
-	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((\.+)|(configure)|(.git)" >> makefile
+	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((\.+)|(Configure)|(configure)|(.git)" >> makefile
 
 inputLength=${#pathType[@]}
 for (( i=$saveLast; i<${inputLength}; i++ ))
