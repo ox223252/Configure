@@ -11,6 +11,68 @@ WIDTH=60
 HEIGH=20
 LINES=12
 
+dataLibs=("pthread" \
+	"sdl.1" \
+	"sdl.2" \
+	"realTime" \
+	"math" \
+	"ssl" \
+	"cares" \
+	"crypto" \
+	"use_DLL" \
+	"create_DLL" \
+	)
+dataLibsValues=("-lpthread" \
+	"-lSDL" \
+	"-lSDL2" \
+	"-lrt" \
+	"-lm" \
+	"-lssl" \
+	"-lcares" \
+	"-lcrypto" \
+	"-ldl" \
+	"-shared" \
+	)
+archTest=("HARD_ARCH" \
+	"MODE" \
+	"WARNING" \
+	"GPROF" \
+	"GDB" \
+	"LINKAGE" \
+	"EQ_OUT_DLL" \
+	)
+warningType=( "std" \
+	"none" \
+	"all" \
+	)
+warningInfos=( "standard" \
+	"pas_de_warnning" \
+	"tous_warning_activés" \
+	)
+outType=( "dynamique" \
+	"static" \
+	)
+outInfos=( "executable" \
+	"shared_lib" \
+	)
+debugTypes=( "GDB" \
+	"GPROF" \
+	"FULL_CPP" \
+	)
+linkageType=( "dynamique" \
+	"static" \
+	)
+optimisationType=( "-O0" \
+	"-O1" \
+	"-O2" \
+	"-O3" \
+	)
+optimisationInfo=( "aucune" \
+	"minimalle"
+	"taille_de_binaire" \
+	"vitesse_d'execution" \
+	)
+#select default editor if no one configured
 [ "$EDITOR" == "" ] && [ -f /bin/nano ] && EDITOR="nano"
 [ "$EDITOR" == "" ] && [ -f /usr/bin/vi ] && EDITOR="vi"
 
@@ -62,21 +124,6 @@ configfile='.config/config_tools_cross.mk'
 
 configfile='.config/config_tools_cross_lib.mk'	
 [ ! -f "$configfile" ]&& echo "CROSS_LIB=" > $configfile
-
-
-# native / cross compile flag
-configfile='.config/config_tools_flags.mk'	
-[ ! -f "$configfile" ] && \
-	echo "PTHREAD=off" > $configfile && \
-	echo "SDL1=off" >> $configfile && \
-	echo "SDL2=off" >> $configfile && \
-	echo "LDLL=off" >> $configfile && \
-	echo "REALTIME=off" >> $configfile && \
-	echo "MATH=off" >> $configfile && \
-	echo "SSL=off" >> $configfile && \
-	echo "CARES=off" >> $configfile && \
-	echo "CRYPTO=off" >> $configfile
-
 
 # hardware hard_arch (natif/cross)
 configfile='.config/config_options_hard_arch.mk'	
@@ -145,12 +192,13 @@ if [ ! -f "$configfile" ]; then
 	echo "include .config/config_mode.mk">> $configfile
 fi
 
+
 # création du makefile
 printMake () {
-printf "# Made by 0x223252
-# All rigth reserved
+	echo "# Made by 0x223252" > makefile
+	echo "# All rigth reserved" >> makefile
 
-include .config.mk
+printf "include .config.mk
 
 ROOT_DIR=.
 SOURCE_DIR=\"src\"
@@ -158,62 +206,29 @@ OUTFOLDER=\"bin\"
 EXEC=\"exec\"
 
 FLAGS+= -D'BY_LINUX_MAKEFILE'
-LDFLAGS+=\$(LIB)
 
-LAST_HARD_ARCH=null
-LAST_MODE=null
-LAST_WARNING=null
-LAST_GPROF=null
-LAST_GDB=null
-LAST_LINKAGE=null
+" >> makefile
 
-LAST_HARD_ARCH=\$(shell [ -f \".last_config\" ] && cat .last_config | grep HARD_ARCH  | cut -d '=' -f2)
-LAST_MODE=\$(shell      [ -f \".last_config\" ] && cat .last_config | grep MODE       | cut -d '=' -f2)
-LAST_WARNING=\$(shell   [ -f \".last_config\" ] && cat .last_config | grep WARNING    | cut -d '=' -f2)
-LAST_GPROF=\$(shell     [ -f \".last_config\" ] && cat .last_config | grep GPROF      | cut -d '=' -f2)
-LAST_GDB=\$(shell       [ -f \".last_config\" ] && cat .last_config | grep GDB        | cut -d '=' -f2)
-LAST_LINKAGE=\$(shell   [ -f \".last_config\" ] && cat .last_config | grep LINKAGE    | cut -d '=' -f2)
-LAST_OUT_DLL=\$(shell   [ -f \".last_config\" ] && cat .last_config | grep OUT_DLL    | cut -d '=' -f2)
+inputLength=${#archTest[@]}
 
-EQ_HARD_ARCH=\$(shell [ -f \".last_config\" ] && [ \"\$(HARD_ARCH)\" = \"\$(LAST_HARD_ARCH)\" ] && echo true)
-EQ_MODE=\$(shell      [ -f \".last_config\" ] && [      \"\$(MODE)\" = \"\$(LAST_MODE)\"      ] && echo true)
-EQ_WARNING=\$(shell   [ -f \".last_config\" ] && [   \"\$(WARNING)\" = \"\$(LAST_WARNING)\"   ] && echo true)
-EQ_GPROF=\$(shell     [ -f \".last_config\" ] && [     \"\$(GPROF)\" = \"\$(LAST_GPROF)\"     ] && echo true)
-EQ_GDB=\$(shell       [ -f \".last_config\" ] && [       \"\$(GDB)\" = \"\$(LAST_GDB)\"       ] && echo true)
-EQ_LINKAGE=\$(shell   [ -f \".last_config\" ] && [   \"\$(LINKAGE)\" = \"\$(LAST_LINKAGE)\"   ] && echo true)
-EQ_OUT_DLL=\$(shell   [ -f \".last_config\" ] && [   \"\$(OUT_DLL)\" = \"\$(LAST_OUT_DLL)\"   ] && echo true)
+for (( i=0; i<${inputLength}; i++ ))
+do
+	echo "LAST_${archTest[$i]}=null" >> makefile
+	echo "LAST_${archTest[$i]}=\$(shell [ -f \".last_config\" ] && cat .last_config | grep ${archTest[$i]} | cut -d '=' -f2)" >> makefile
+	echo "EQ_${archTest[$i]}=\$(shell [ -f \".last_config\" ] && [ \"\$(${archTest[$i]})\" = \"\$(LAST_${archTest[$i]})\" ] && echo true)" >> makefile
+	echo "" >> makefile
+	echo "ifneq (\$(EQ_${archTest[$i]}),true)" >> makefile
+	echo "	DEPEND=mrproper" >> makefile
+	echo "endif" >> makefile
+	echo "" >> makefile
+done
 
-ifneq (\$(EQ_HARD_ARCH),true)
-	DEPEND=mrproper
-endif
-
-ifneq (\$(EQ_MODE),true)
-	DEPEND=mrproper
-endif
-
-ifneq (\$(EQ_WARNING),true)
-	DEPEND=mrproper
-endif
-		
-ifneq (\$(EQ_GPROF),true)
-	DEPEND=mrproper
-endif
-
-ifneq (\$(EQ_GDB),true)
-	DEPEND=mrproper
-endif
-
-ifneq (\$(EQ_LINKAGE),true)
-	DEPEND=mrproper
-endif
-
-ifneq (\$(EQ_OUT_DLL),true)
-	DEPEND=mrproper
-endif
-
-ifneq (\$(HARD_ARCH),natif)
+printf "ifneq (\$(HARD_ARCH),natif)
 	CXX=\$(CROSS_CXX)
 	CC=\$(CROSS_CC)
+	LDFLAGS+=\$(CROSS_LIB)
+else
+	LDFLAGS+=\$(LIB)
 endif
 
 ifeq (\$(MODE),release)	
@@ -232,47 +247,19 @@ else ifeq (\$(WARNING), none)
 	FLAGS+= -w
 endif
 
-ifeq (\$(LDLL),on)
-	LDFLAGS+= -ldl
-endif
+" >> makefile
 
-ifeq (\$(OUT_DLL),on)
-	LDFLAGS+= -shared
-endif
+inputLength=${#dataLibs[@]}
 
-ifeq (\$(PTHREAD),on)
-	LDFLAGS+= -lpthread
-endif
+for (( i=0; i<${inputLength}; i++ ))
+do
+	echo "ifeq (\$(${dataLibs[${i}]}),on)" >> makefile
+	echo "	LDFLAGS+= ${dataLibsValues[${i}]}" >> makefile
+	echo "endif" >> makefile
+	echo "" >> makefile
+done
 
-ifeq (\$(SDL1),on)
-	LDFLAGS+= -lSDL
-endif
-
-ifeq (\$(SDL2),on)
-	LDFLAGS+= -lSDL2
-endif
-
-ifeq (\$(REALTIME),on)
-	LDFLAGS+= -lrt
-endif
-
-ifeq (\$(MATH),on)
-	LDFLAGS+= -lm
-endif
-
-ifeq (\$(SSL),on)
-	LDFLAGS+= -lssl
-endif
-
-ifeq (\$(CARES),on)
-	LDFLAGS+= -lcares
-endif
-
-ifeq (\$(CRYPTO),on)
-	LDFLAGS+= -lcrypto
-endif
-
-ifeq (\$(GPROF),on)
+printf "ifeq (\$(GPROF),on)
 	FLAGS+= -pg
 	LDFLAGS+= -pg
 endif
@@ -372,7 +359,7 @@ mrproper: clean cleanDump cleanDoc
 
 empty: mrproper
 	@echo \"#!/bin/bash\" > script.sh
-	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((configure)|(\.+)|(src)|(patch)|(res)|(.git)|(lib))\$\$\\\")\' >> script.sh
+	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((configure)|(.config)|(\.+)|(src)|(patch)|(res)|(.git)|(lib))\$\$\\\")\' >> script.sh
 	@chmod +x script.sh
 	@./script.sh
 
@@ -383,29 +370,159 @@ makedeps:
 	@[ ! -f .config ] && echo > .config
 
 printEnv:
-	@echo \"LAST_HARD_ARCH=\"\$(LAST_HARD_ARCH)
-	@echo \"LAST_MODE=\"\$(LAST_MODE)
-	@echo \"LAST_WARNING=\"\$(LAST_WARNING)
-	@echo \"LAST_GPROF=\"\$(LAST_GPROF)
-	@echo \"LAST_GDB=\"\$(LAST_GDB)
-	@echo \"LAST_LINKAGE=\"\$(LAST_LINKAGE)
-	@echo \"HARD_ARCH=\"\$(HARD_ARCH)
-	@echo \"MODE=\"\$(MODE)
-	@echo \"WARNING=\"\$(WARNING)
-	@echo \"GPROF=\"\$(GPROF)
-	@echo \"LAST_GDB=\"\$(LAST_GDB)
-	@echo \"LINKAGE=\"\$(LINKAGE)
-	@echo \"EQ_HARD_ARCH=\"\$(EQ_HARD_ARCH)
-	@echo \"EQ_MODE=\"\$(EQ_MODE)
-	@echo \"EQ_WARNING=\"\$(EQ_WARNING)
-	@echo \"EQ_GPROF=\"\$(EQ_GPROF)
-	@echo \"EQ_GDB=\"\$(EQ_GDB)
-	@echo \"EQ_LINKAGE=\"\$(EQ_LINKAGE)
+" >> makefile
 
-" > makefile
+inputLength=${#archTest[@]}
+
+for (( i=0; i<${inputLength}; i++ ))
+do
+	echo "	@echo \"LAST_${archTest[$i]}=\"\$(LAST_${archTest[$i]})" >> makefile
+	echo "	@echo \"${archTest[$i]}=\"\$(${archTest[$i]})" >> makefile
+	echo "	@echo \"EQ_${archTest[$i]}=\"\$(EQ_${archTest[$i]})" >> makefile
+done
 }
 
 [ ! -f makefile ] && printMake && exit
+
+
+
+
+checkWindow () 
+{
+	# $1 title
+	# $2 winType
+	# $3 config file
+	# $4 cancel
+	# $5 inputs
+
+	title=$1
+	winType=$2
+	configfile=$3
+	cancel=$4
+
+	input=($5)
+
+	if [ "$winType" != "checklist" ]; then
+		return
+	fi
+
+	if [ "$cancel" != "--nocancel" ]; then
+		cancel="--cancel-label $cancel"
+	fi
+
+	values=()
+
+	configfile='.config/config_tools_flags.mk'
+
+	inputLength=${#input[@]}
+
+	PARAMS=""
+
+	for (( i=0; i<${inputLength}; i++ ))
+	do
+		if [ -f "$configfile" ]; then
+			tmp=$(cat $configfile | grep ${input[$i]})
+			if [ "$tmp" != "" ]; then
+				values[${i}]=$(echo $tmp | cut -d '=' -f2)
+			else
+				values[${i}]="off"
+			fi
+		else
+			values[${i}]="off"
+		fi
+
+		# save params
+		PARAMS="$PARAMS $i ${input[$i]} ${values[$i]}"
+
+		# reset all params
+		values[${i}]="off"
+	done
+
+	dialog $cancel \
+		--checklist \
+		"$title" \
+		$HEIGH \
+		$WIDTH \
+		$LINES \
+		$PARAMS 2> $tmpFile
+
+	parameters=$(cat $tmpFile)
+
+	for item in $parameters
+	do
+		values[${item}]="on"
+	done
+
+	echo > $configfile
+	for (( i=0; i<${inputLength}; i++ ))
+	do
+		echo "${input[$i]}=${values[$i]}" >> $configfile
+	done
+}
+
+selectWinodw ()
+{
+	# $1 title
+	# $2 winType
+	# $3 config file
+	# $4 cancel
+	# $5 ID
+	# $6 options
+	# $7 comment
+
+	title=$1
+	winType=$2
+	configfile=$3
+	cancel=$4
+	ID=$5
+
+	input=($6)
+	info=($7)
+
+	if [ "$winType" != "radiolist" ]; then
+		return
+	fi
+
+	if [ "$cancel" != "--nocancel" ]; then
+		cancel="--cancel-label $cancel"
+	fi
+
+	values=()
+	active=$(cat $configfile | grep $ID | cut -d '=' -f2)
+	
+	inputLength=${#input[@]}
+
+	PARAMS=""
+
+	for (( i=0; i<${inputLength}; i++ ))
+	do
+		if [ "$active" == "${input[$i]}" ]; then
+			value[${i}]="on"
+		else
+			value[${i}]="off"
+		fi
+
+		PARAMS="$PARAMS $i ${info[$i]} ${value[$i]}"
+	done
+	
+	dialog $cancel \
+		--radiolist \
+		"$title" \
+		$HEIGH \
+		$WIDTH \
+		$LINES \
+		$PARAMS 2> $tmpFile
+
+	retv=$?
+	choice=$(cat $tmpFile)
+
+	echo "$ID=${input[$choice]}" > $configfile
+}
+
+editWindow ()
+{
+	echo "not done"
+}
 
 tool_natif () {
 	configfile='.config/config_tools_natif.mk'	
@@ -477,72 +594,6 @@ tool_cross_lib () {
 	return
 }
 
-tool_flags () {
-	configfile='.config/config_tools_flags.mk'
-	[ ! -f "$configfile" ] && echo "PTHREAD=off" > $configfile && echo "SDL1=off" >> $configfile && echo "SDL2=off" >> $configfile
-
-
-	pthread=$(cat $configfile | grep PTHREAD | cut  -d '=' -f2)
-	sdl1=$(cat $configfile | grep SDL1 | cut  -d '=' -f2)
-	sld2=$(cat $configfile | grep SDL2 | cut  -d '=' -f2)
-	ldll=$(cat $configfile | grep LDLL | cut  -d '=' -f2)
-	rt=$(cat $configfile | grep REALTIME | cut  -d '=' -f2)
-	math=$(cat $configfile | grep MATH | cut  -d '=' -f2)
-	ssl=$(cat $configfile | grep SSL | cut  -d '=' -f2)
-	cares=$(cat $configfile | grep CARES | cut  -d '=' -f2)
-	crypto=$(cat $configfile | grep CRYPTO | cut  -d '=' -f2)
-
-	dialog --nocancel \
-		--checklist "debug option" $HEIGH $WIDTH $LINES \
-		1 "pthread" $pthread \
-		2 "sdl1" $sdl1 \
-		3 "sld2" $sld2 \
-		4 "dll" $ldll \
-		5 "real time (rt)" $rt \
-		6 "math" $math \
-		7 "ssl" $ssl \
-		8 "cares" $cares\
-		9 "crypto" $crypto 2> $tmpFile
-
-	retval=$?
-	parameter=$(cat $tmpFile)
-
-	pthread="off"
-	sdl1="off"
-	sdl2="off"
-	ldll="off"
-	rt = "off"
-	math = "off"
-	ssl = "off"
-	cares = "off"
-	crypto = "off"
-
-	for item in $parameter
-	do
-		case $item in
-			1) pthread="on" ;;
-			2) sdl1="on" ;;
-			3) sdl2="on" ;;
-			4) ldll="on" ;;
-			5) rt="on" ;;
-			6) math="on" ;;
-			7) ssl="on" ;;
-			8) cares="on" ;;
-			9) crypto="on" ;;
-		esac
-	done
-
-	echo "PTHREAD="$pthread > $configfile
-	echo "SDL1="$sdl1 >> $configfile
-	echo "SDL2="$sdl2 >> $configfile
-	echo "LDLL="$ldll >> $configfile
-	echo "REALTIME="$rt >> $configfile
-	echo "MATH="$math >> $configfile
-	echo "SSL="$ssl >> $configfile
-	echo "CARES="$cares >> $configfile
-	echo "CRYPTO="$crypto >> $configfile
-}
-
 tools () {
 	dialog --cancel-label "Back" \
 		--title "SLAMer" \
@@ -569,7 +620,12 @@ tools () {
 		4) 	tool_cross_lib
 			tools
 			;;
-		5) 	tool_flags
+		5) 	checkWindow \
+				"debug option" \
+				"checklist" \
+				".config/config_tools_flags.mk" \
+				"--nocancel" \
+				"${dataLibs[*]}"
 			tools
 			;;
 	esac
@@ -642,82 +698,6 @@ options_hard_arch () {
 	fi
 }
 
-options_warning () {
-	configfile='.config/config_options_warning.mk'	
-	[ ! -f "$configfile" ] && echo "WARNING=std" > $configfile
-	active=$(cat $configfile | grep WARNING | cut -d '=' -f2)
-	
-	none="off"
-	all="off"
-	std="off"
-	case $active in
-		all)
-			all="on"
-			;;
-		none)
-			none="on"
-			;;
-		*)
-			std="on"
-			;;
-	esac
-	dialog --cancel-label "Back" \
-		--radiolist "niveau de warning" $HEIGH $WIDTH $LINES \
-		1 "standard" $std\
-		2 "pas de warnning" $none\
-		3 "tous warning activés" $all 2> $tmpFile
-
-	retv=$?
-	choice=$(cat $tmpFile)
-
-	case $choice in
-		1)	echo "WARNING=std" > $configfile
-			;;
-		2)	echo "WARNING=none" > $configfile
-			;;
-		3)	echo "WARNING=all" > $configfile
-			;;
-	esac
-}
-
-options_optimisation () {
-	configfile='.config/config_options_optimisation.mk'	
-	[ ! -f "$configfile" ] && echo "OPTIMISATION=std" > $configfile
-	active=$(cat $configfile | grep OPTIMISATION | cut -d '=' -f2)
-	
-	size="off"
-	speed="off"
-	std="off"
-	case $active in
-		-Os)
-			size="on"
-			;;
-		-O2)
-			speed="on"
-			;;
-		*)
-			std="on"
-			;;
-	esac
-	dialog --cancel-label "Back" \
-		--radiolist "type d'optimisation" $HEIGH $WIDTH $LINES \
-		1 "standard" $std\
-		2 "poptimisé en vitesse d'execution" $speed\
-		3 "optimisé en taille de sortie" $size 2> $tmpFile
-
-	retv=$?
-	choice=$(cat $tmpFile)
-
-	case $choice in
-		1)	echo "OPTIMISATION=" > $configfile
-			;;
-		2)	echo "OPTIMISATION=-O2" > $configfile
-			;;
-		3)	echo "OPTIMISATION=-Os" > $configfile
-			;;
-	esac
-}
-
 options_patch () {
 	configfile='.config/config_options_patch.mk'	
 	[ ! -f "$configfile" ] && echo "PATCH=" > $configfile
@@ -758,107 +738,6 @@ options_patch () {
 	esac
 }
 
-option_linkage () {
-	configfile='.config/config_options_linkage.mk'	
-	[ ! -f "$configfile" ] && echo "LINKAGE=dynamique" > $configfile
-	active=$(cat $configfile | grep LINKAGE | cut -d '=' -f2)
-	
-	static="off"
-	dynamique="off"
-	case $active in
-		dynamique)
-			dynamique="on"
-			;;
-		static)
-			static="on"
-			;;
-	esac
-	dialog --cancel-label "Back" \
-		--radiolist "type de linkage" $HEIGH $WIDTH $LINES \
-		1 "dynamique" $dynamique\
-		2 "statics" $static 2> $tmpFile
-
-	retv=$?
-	choice=$(cat $tmpFile)
-
-	case $choice in
-		1)	echo "LINKAGE=dynamique" > $configfile
-			;;
-		2)	echo "LINKAGE=static" > $configfile
-			;;
-	esac
-}
-
-options_debug () {
-	configfile='.config/config_options_debug.mk'	
-	[ ! -f "$configfile" ] && echo "GDB=off" > $configfile && echo "GPROF=off" >> $configfile && echo "FULL_CPP=off" >> $configfile
-
-
-	gdb=$(cat $configfile | grep GDB | cut  -d '=' -f2)
-	gprof=$(cat $configfile | grep GPROF | cut  -d '=' -f2)
-	cpp=$(cat $configfile | grep FULL_CPP | cut  -d '=' -f2)
-
-	dialog --nocancel \
-		--checklist "debug option" $HEIGH $WIDTH $LINES \
-		1 "gdb" $gdb \
-		2 "gprof" $gprof \
-		3 "full cpp use" $cpp 2> $tmpFile
-
-	retval=$?
-	parameter=$(cat $tmpFile)
-
-	gdb="off"
-	gprof="off"
-	cpp="off"
-
-	for item in $parameter
-	do
-		case $item in
-			1)	gdb="on"
-				;;
-			2)	gprof="on"
-				;;
-			3)	cpp="on"
-				;;
-		esac
-	done
-
-	echo "GDB=$gdb" > $configfile
-	echo "GPROF=$gprof" >> $configfile
-	echo "FULL_CPP=$cpp" >> $configfile
-}
-
-option_outType () {
-	configfile='.config/config_options_outType.mk'
-	[ ! -f "$configfile" ] && echo "OUT_DLL=off" > $configfile
-	active=$(cat $configfile | grep OUT_DLL | cut -d '=' -f2)
-
-	static="off"
-	dynamique="off"
-	case $active in
-		on)
-			dynamique="on"
-			;;
-		off)
-			static="on"
-			;;
-	esac
-	dialog --cancel-label "Back" \
-		--radiolist "type de linkage" $HEIGH $WIDTH $LINES \
-		1 "dynamique" $dynamique\
-		2 "statics" $static 2> $tmpFile
-
-	retv=$?
-	choice=$(cat $tmpFile)
-
-	case $choice in
-		1)	echo "OUT_DLL=on" > $configfile
-			;;
-		2)	echo "OUT_DLL=off" > $configfile
-			;;
-	esac
-}
-
 options () { 
 	hard_arch=''
 	warning=''
@@ -870,14 +749,14 @@ options () {
 	[ -f '.config/config_options_outType.mk' ] &&  out=$(cat '.config/config_options_outType.mk' | grep OUT_DLL | cut -d '=' -f2)
 
 	dialog --cancel-label "Back" \
-		--title "SLAMer" \
+		--title "option" \
 		--menu "Options de compilation" $HEIGH $WIDTH $LINES \
 			1 "Hardware arch : "$hard_arch \
 			2 "Warnning : "$warning \
 			3 "Optimisation : "$optimisation \
 			4 "Linkage : "$linkage \
 			5 "Debug" \
-			6 "OUT : "$out 2> $tmpFile
+			6 "out : "$out 2> $tmpFile
 
 	retv=$?
 	choice=$(cat $tmpFile)
@@ -886,19 +765,57 @@ options () {
 		1) 	options_hard_arch
 			options
 			;;
-		2) 	options_warning
+		2) # warning
+			selectWinodw \
+				"niveau de warning" \
+				"radiolist" \
+				".config/config_options_warning.mk" \
+				"Back" \
+				"WARNING" \
+				"${warningType[*]}" \
+				"${warningInfos[*]}"
 			options
 			;;
-		3) 	options_optimisation
+		3) # optimisation
+			selectWinodw \
+				"type d'optimisation" \
+				"radiolist" \
+				".config/config_options_optimisation.mk" \
+				"Back" \
+				"OPTIMISATION" \
+				"${optimisationType[*]}" \
+				"${optimisationInfo[*]}"
 			options
 			;;
-		4)	option_linkage
+		4) # linkage
+			selectWinodw \
+				"type de linkage" \
+				"radiolist" \
+				".config/config_options_linkage.mk" \
+				"Back" \
+				"LINKAGE" \
+				"${linkageType[*]}" \
+				"${linkageType[*]}"
 			options
 			;;
-		5) 	options_debug
+		5) # debug
+			checkWindow \
+				"debug option" \
+				"checklist" \
+				".config/config_options_debug.mk" \
+				"Back" \
+				"${debugTypes[*]}"
 			options
 			;;
-		6)	option_outType
+		6) # binaire
+			selectWinodw \
+				"type de binaire produit" \
+				"radiolist" \
+				".config/config_options_outType.mk" \
+				"Back" \
+				"OUT_DLL" \
+				"${outType[*]}" \
+				"${outInfos[*]}"
 			options
 			;;
 	esac
@@ -1008,3 +925,6 @@ main () {
 }
 
 main $0
+
+
+
