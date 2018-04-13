@@ -185,10 +185,16 @@ printMake () {
 
 printf "include $configFolder/*
 
+# project root folder
 ROOT_DIR=.
-SOURCE_DIR=\"src\"
-OUTFOLDER=\"bin\"
-EXEC=\"exec\"
+# source folder name
+SOURCE_DIR=src
+# exec folder name
+OUTFOLDER=bin
+# exec file name
+EXEC=exec
+# debug / release
+MODE=debug
 
 FLAGS+= -D'BY_LINUX_MAKEFILE'
 
@@ -270,7 +276,7 @@ all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CON
 	@echo \"+=======================================+\"
 	@echo \"|	\\\\033[1;92mBuid done\\\\033[0m\\t\\t\\t|\"
 	@echo \"| for hard_arch : \\\\033[1;92m\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\\\\033[0m   \\t\\t|\"
-	@printf \"| in : \\\\033[1;92m%5s\\\\033[0m mode \t\t\t|\\\\n\" \$(MODE)
+	@echo \"| in : \\\\033[1;92m\$(MODE)\\\\033[0m mode \t\t\t|\"
 	@echo \"+=======================================+\"
 
 testVar:
