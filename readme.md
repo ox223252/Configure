@@ -85,21 +85,21 @@ the makefile config can be overwrite manually to change the output with this val
 | OPTIMISATION | -O0 		| -O1/-O2/-O3 		|
 | OUT_DLL 	| static 		| dynamic			|
 | WARNING 	| std 			| non/all			|
-| EXEC 		| exec			| <name of exec>	|
-| OUTFOLDER | out			| <name of folder used for exec outputs> |
-| ROOT_DIR 	| bin			| <name of root folder for exec binary> |
-| DOC_DIR 	| doc			| <name of documentation> |
-| SOURCE_DIR | src 			| <name of sources>	|
-| RESSOURCES_DIR | res 		| <name of ressources[if needed]> |
-| LIB_DIR 	| lib 			| <name of additionals libs> |
-| CONFIG_DIR | .config 		| <name of config folder> |
-| CC 		| gcc			| <C compiler [natif]> |
-| CXX 		| g++			| <C++ compiler [natif]> |
-| LABEL 	| arm			| <label for cross tool> |
-| HARD_ARCH | natif			| <LABEL[use for next compilation]> |
-| CROSS_CC 	| arm-linux-gnueabi-gcc | <C compiler [cross]> |
-| CROSS_CXX | arm-linux-gnueabi-g++ | <C++ compiler [cross]> |
-| LIB 		|  				 | <path of additionals libs> |
+| EXEC 		| exec			| name of exec	|
+| OUTFOLDER | out			| name of folder used for exec outputs |
+| ROOT_DIR 	| bin			| name of root folder for exec binary |
+| DOC_DIR 	| doc			| name of documentation |
+| SOURCE_DIR | src 			| name of sources	|
+| RESSOURCES_DIR | res 		| name of ressources[if needed] |
+| LIB_DIR 	| lib 			| name of additionals libs |
+| CONFIG_DIR | .config 		| name of config folder |
+| CC 		| gcc			| C compiler [natif] |
+| CXX 		| g++			| C++ compiler [natif] |
+| LABEL 	| arm			| label for cross tool |
+| HARD_ARCH | natif			| LABEL[use for next compilation] |
+| CROSS_CC 	| arm-linux-gnueabi-gcc | C compiler [cross] |
+| CROSS_CXX | arm-linux-gnueabi-g++ | C++ compiler [cross] |
+| LIB 		|  				 | path of additionals libs |
 
 for example this command will generate a cross compiled binary for arm with gdb activated.
 ```shell
