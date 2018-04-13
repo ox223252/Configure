@@ -65,8 +65,9 @@ make empty
 
 ### Advanced
 the makefile config can be overwrite manually to change the output with this values:
+
 | var label | default value | available values 	|
-| :---		| :---			| :---				|
+| ---		| ---			| ---				|
 | GDB 		| off 			| on 				|
 | GPROF 	| off 			| on 				|
 | FULL_CPP 	| off 			| on 				|
