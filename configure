@@ -11,6 +11,8 @@ WIDTH=60
 HEIGH=20
 LINES=12
 
+configFolder=".config"
+
 dataLibs=("pthread" \
 	"sdl.1" \
 	"sdl.2" \
@@ -72,6 +74,34 @@ optimisationInfo=( "aucune" \
 	"taille_de_binaire" \
 	"vitesse_d'execution" \
 	)
+modeInfos=( "compilé_avec_les_logs_de_debug_affichable" \
+	"compilé_sans_aucun_log_de_debug" \
+	)
+modeType=( "debug" \
+	"release" \
+	)
+pathType=( "EXEC" \
+	"OUTFOLDER" \
+	"ROOT_DIR" \
+	"DOC_DIR" \
+	"SOURCE_DIR" \
+	"PATCH_DIR" \
+	"RESSOURCES_DIR" \
+	"CONFIG_DIR" \
+	"LIB_DIR" \
+	)
+pathValue=( "exec" \
+	"bin" \
+	"." \
+	"doc" \
+	"src" \
+	"patch" \
+	"res" \
+	"$configFolder" \
+	"lib" \
+	)
+saveLast=4
+
 #select default editor if no one configured
 [ "$EDITOR" == "" ] && [ -f /bin/nano ] && EDITOR="nano"
 [ "$EDITOR" == "" ] && [ -f /usr/bin/vi ] && EDITOR="vi"
@@ -100,60 +130,41 @@ fi
 # créait quoi qu'il arrive un dossier .config
 tmpFile=/tmp/config_dialog
 
-[ -f .config ] && \
-	rm .config
-[ ! -d .config ] && \
-	mkdir .config
+[ -f "$configFolder" ] && \
+	rm $configFolder
+[ ! -d "$configFolder" ] && \
+	mkdir $configFolder
+
+# path
+if [ ! -f "$configFolder/config_path.mk" ]; then
+	inputLength=${#pathType[@]}
+
+	for (( i=0; i<${inputLength}; i++ ))
+	do
+		echo "${pathType[$i]}=${pathValue[$i]}" >> "$configFolder/config_path.mk"
+	done
+fi
 
 # navtive tools
-configfile='.config/config_tools_natif.mk'	
+configfile="$configFolder/config_tools_natif.mk"
 [ ! -f "$configfile" ] && \
 	echo "CC=gcc" > $configfile && \
 	echo "CXX=g++" >> $configfile
 
-configfile='.config/config_tools_natif_lib.mk'	
-[ ! -f "$configfile" ] && \
-	echo "LIB=" > $configfile
-
 # cross tools
-configfile='.config/config_tools_cross.mk'
+configfile="$configFolder/config_tools_cross.mk"
 [ ! -f "$configfile" ] && \
 	echo "LABEL=arm" > $configfile && \
 	echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && \
 	echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile
 
-configfile='.config/config_tools_cross_lib.mk'	
-[ ! -f "$configfile" ]&& echo "CROSS_LIB=" > $configfile
-
 # hardware hard_arch (natif/cross)
-configfile='.config/config_options_hard_arch.mk'	
+configfile="$configFolder/config_options_hard_arch.mk"
 [ ! -f "$configfile" ] && \
 	echo "HARD_ARCH=natif" > $configfile
 
-configfile='.config/config_options_warning.mk'	
-[ ! -f "$configfile" ] && \
-	echo "WARNING=std" > $configfile
-
-configfile='.config/config_options_linkage.mk'	
-[ ! -f "$configfile" ] && \
-	echo "LINKAGE=dynamique" > $configfile
-	
-configfile='.config/config_options_optimisation.mk'	
-[ ! -f "$configfile" ] && \
-	echo "OPTIMISATION=std" > $configfile
-
-configfile='.config/config_options_outType.mk'
-[ ! -f "$configfile" ] && \
-	echo "OUT_DLL=off" > $configfile
-
-configfile='.config/config_options_debug.mk'	
-[ ! -f "$configfile" ] && \
-	echo "GDB=off" > $configfile && \
-	echo "GPROF=off" >> $configfile && \
-	echo "FULL_CPP=off" >> $configfile
-
 # work dir
-configfile='.config/config_path.mk'	
+configfile="$configFolder/config_path.mk"	
 [ ! -f "$configfile" ] && \
 	echo "ROOT_DIR=bin" > $configfile && \
 	echo "EXEC=exec" >> $configfile && \
@@ -162,43 +173,17 @@ configfile='.config/config_path.mk'
 	echo "DOC_DIR=doc" >> $configfile && \
 	echo "PATCH_DIR=patch" >> $configfile
 
-# compile mode
-configfile='.config/config_mode.mk'	
-[ ! -f "$configfile" ] && \
-	echo "MODE=debug" > $configfile
-
 # patch save
-configfile='.config/config_options_patch.mk'	
+configfile="$configFolder/config_options_patch.mk"	
 [ ! -f "$configfile" ] && \
 	echo "PATCH=" > $configfile
-
-configfile='.config.mk'	
-if [ ! -f "$configfile" ]; then 
-	echo "include .config/config_tools_natif.mk" > $configfile
-	echo "include .config/config_tools_natif_lib.mk" >> $configfile
-	echo "include .config/config_tools_cross.mk" >> $configfile
-	echo "include .config/config_tools_cross_lib.mk" >> $configfile
-	echo "include .config/config_tools_flags.mk" >> $configfile
-
-	echo "include .config/config_options_hard_arch.mk" >> $configfile
-	echo "include .config/config_options_warning.mk" >> $configfile
-	echo "include .config/config_options_optimisation.mk" >> $configfile
-	echo "include .config/config_options_linkage.mk">>$configfile
-	echo "include .config/config_options_debug.mk" >> $configfile
-	echo "include .config/config_options_outType.mk" >> $configfile
-
-	echo "include .config/config_path.mk" >> $configfile
-
-	echo "include .config/config_mode.mk">> $configfile
-fi
-
 
 # création du makefile
 printMake () {
 	echo "# Made by 0x223252" > makefile
 	echo "# All rigth reserved" >> makefile
 
-printf "include .config.mk
+printf "include $configFolder/*
 
 ROOT_DIR=.
 SOURCE_DIR=\"src\"
@@ -281,36 +266,32 @@ C_OBJ=\$(C_SRC:.c=.o)
 
 OBJ=\$(C_OBJ) \$(CPP_OBJ)
 
-all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) .config \$(ROOT_DIR)/\$(OUTFOLDER)
+all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) \$(ROOT_DIR)/\$(OUTFOLDER)
 	@echo \"+=======================================+\"
 	@echo \"|	\\\\033[1;92mBuid done\\\\033[0m\\t\\t\\t|\"
 	@echo \"| for hard_arch : \\\\033[1;92m\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\\\\033[0m   \\t\\t|\"
-	@echo \"| in : \\\\033[1;92m\$(MODE)\\\\033[0m mode \t\t\t|\"
+	@printf \"| in : \\\\033[1;92m%5s\\\\033[0m mode \t\t\t|\\\\n\" \$(MODE)
 	@echo \"+=======================================+\"
 
 testVar:
 	@echo \"assert input var, do not remove this else it should be \\\\033[1;31mdangerous\\\\033[0m\"
-ifeq (\$(ROOT_DIR),/)
-	@echo \"\\\\033[1;91mVar test ROOT_DIR not valides\\\\033[0m\"
-	@exit 1
-endif
-ifeq (\$(ROOT_DIR),)
-	@echo \"\\\\033[1;91mVar test ROOT_DIR not valides\\\\033[0m\"
-	@exit 1
-endif
-ifeq (\$(SOURCE_DIR),)
-	@echo \"\\\\033[1;91mVar test SOURCE_DIR not valides\\\\033[0m\"
-	@exit 1
-endif
-ifeq (\$(EXEC),)
-	@echo \"\\\\033[1;91mVar test EXEC not valides\\\\033[0m\"
-	@exit 1
-endif
-ifeq (\$(OUTFOLDER),)
-	@echo \"\\\\033[1;91mVar test OUTFOLDER not valides\\\\033[0m\"
-	@exit 1
-endif
-	@echo \"\\\\033[1;92mVar tests valides, continue\\\\033[0m\"
+" >> makefile
+
+inputLength=${#pathType[@]}
+
+for (( i=0; i<${inputLength}; i++ ))
+do
+	echo "ifeq (\$(${pathType[${i}]}),)" >> makefile
+	echo "	@echo \"\\\\033[1;91m${pathType[${i}]}: \$(${pathType[${i}]}) not valide\\\\033[0m\"" >> makefile
+	echo "	@exit 1" >> makefile
+	echo "endif" >> makefile
+	echo "ifeq (\$(${pathType[${i}]}),/)" >> makefile
+	echo "	@echo \"\\\\033[1;91m${pathType[${i}]}: \$(${pathType[${i}]}) not valide\\\\033[0m\"" >> makefile
+	echo "	@exit 1" >> makefile
+	echo "endif" >> makefile
+done
+
+printf "	@echo \"\\\\033[1;92mVar tests valides, continue\\\\033[0m\"
 
 \$(ROOT_DIR):
 	@\$(shell [ -d \"\$(ROOT_DIR)\" ] || mkdir -p \"\$(ROOT_DIR)\" )
@@ -359,15 +340,32 @@ mrproper: clean cleanDump cleanDoc
 
 empty: mrproper
 	@echo \"#!/bin/bash\" > script.sh
-	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((configure)|(.config)|(\.+)|(src)|(patch)|(res)|(.git)|(lib))\$\$\\\")\' >> script.sh
+	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((\.+)|(configure)|(.git)" >> makefile
+
+inputLength=${#pathType[@]}
+for (( i=$saveLast; i<${inputLength}; i++ ))
+do
+	printf "|(\$(${pathType[$i]}))" >> makefile
+done
+printf ")\$\$\\\")\' >> script.sh
+
+	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((\.+)|(configure)|(.git)" >> makefile
+
+inputLength=${#pathType[@]}
+for (( i=$saveLast; i<${inputLength}; i++ ))
+do
+	printf "|(\$(${pathType[$i]}))" >> makefile
+done
+printf ")\$\$\\\")\'
+
 	@chmod +x script.sh
 	@./script.sh
 
 makedeps:
 	@makedepend -Y \$(C_SRC) \$(CPP_SRC) 2> /dev/null
 
-.config:
-	@[ ! -f .config ] && echo > .config
+\$(CONFIG):
+	@[ ! -f \$(CONFIG) ] && echo > \$(CONFIG)
 
 printEnv:
 " >> makefile
@@ -383,9 +381,6 @@ done
 }
 
 [ ! -f makefile ] && printMake && exit
-
-
-
 
 checkWindow () 
 {
@@ -412,7 +407,7 @@ checkWindow ()
 
 	values=()
 
-	configfile='.config/config_tools_flags.mk'
+	configfile=$3
 
 	inputLength=${#input[@]}
 
@@ -516,16 +511,38 @@ selectWinodw ()
 	retv=$?
 	choice=$(cat $tmpFile)
 
-	echo "$ID=${input[$choice]}" > $configfile
+	if [ "$ID=${input[$choice]}" != "" ]; then
+		echo "$ID=${input[$choice]}" > $configfile
+	else
+		echo "$ID=${input[0]}" > $configfile
+	fi
 }
 
 editWindow ()
 {
-	echo "not done"
+	# $1 ID
+	# $2 config file
+	# $default values
+	ID=($1)
+	configfile=$2
+	values=($3)
+
+	if [ ! -f "$configfile" ]; then
+		inputLength=${#ID[@]}
+
+		echo "" > $configfile
+
+		for (( i=0; i<${inputLength}; i++ ))
+		do
+			echo "${ID[$i]}=${values[$i]}" >> $configfile
+		done
+	fi
+
+	$EDITOR -c $configfile
 }
 
 tool_natif () {
-	configfile='.config/config_tools_natif.mk'	
+	configfile='$configFolder/config_tools_natif.mk'	
 	[ ! -f "$configfile" ] && echo "CC=gcc" > $configfile && echo "CXX=g++" >> $configfile
 	items=$(awk -F\= '{print $1,$2}' $configfile)
 	dialog --menu "Natif" $HEIGH $WIDTH $LINES $items 2> $tmpFile
@@ -551,16 +568,8 @@ tool_natif () {
 	dialog --textbox $configfile 0 0
 }
 
-tool_native_lib () {
-	configfile='.config/config_tools_natif_lib.mk'
-	[ ! -f "$configfile" ]&& echo "LIB=" > $configfile
-
-	$EDITOR -c $configfile
-	return
-}
-
 tool_cross () {
-	configfile='.config/config_tools_cross.mk'
+	configfile='$configFolder/config_tools_cross.mk'
 	[ ! -f "$configfile" ] && echo "LABEL=arm" > $configfile  && echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile
 	items=$(awk -F\= '{print $1,$2}' $configfile)
 	dialog --menu "cross" $HEIGH $WIDTH $LINES $items 2> $tmpFile	
@@ -586,14 +595,6 @@ tool_cross () {
 	dialog --textbox $configfile 0 0
 }
 
-tool_cross_lib () {
-	configfile='.config/config_tools_cross_lib.mk'	
-	[ ! -f "$configfile" ]&& echo "CROSS_LIB=" > $configfile
-	
-	$EDITOR -c $configfile
-	return
-}
-
 tools () {
 	dialog --cancel-label "Back" \
 		--title "SLAMer" \
@@ -611,19 +612,23 @@ tools () {
 		1) 	tool_natif
 			tools
 			;;
-		2) 	tool_native_lib
+		2) 	editWindow \
+				"LIB" \
+				"$configFolder/config_tools_natif_lib.mk"
 			tools
 			;;
 		3) 	tool_cross
 			tools
 			;;
-		4) 	tool_cross_lib
+		4) 	editWindow \
+				"CROSS_LIB" \
+				"$configFolder/config_tools_cross_lib.mk"
 			tools
 			;;
 		5) 	checkWindow \
 				"debug option" \
 				"checklist" \
-				".config/config_tools_flags.mk" \
+				"$configFolder/config_tools_flags.mk" \
 				"--nocancel" \
 				"${dataLibs[*]}"
 			tools
@@ -632,11 +637,11 @@ tools () {
 }
 
 options_hard_arch () {
-	configfile='.config/config_options_hard_arch.mk'	
+	configfile='$configFolder/config_options_hard_arch.mk'	
 	[ ! -f "$configfile" ] && echo "HARD_ARCH=natif" > $configfile
 	active=$(cat $configfile | grep HARD_ARCH | cut -d '=' -f2)
 	
-	labelfile='.config/config_tools_cross.mk'
+	labelfile='$configFolder/config_tools_cross.mk'
 	[ -f "$labelfile" ] && crossTool=$(cat $labelfile | grep LABEL | cut -d '=' -f2)
 	
 	cross="off"
@@ -666,7 +671,7 @@ options_hard_arch () {
 	esac
 
 	if [ $cross == "on" ]; then
-		configfile='.config/config_tools_cross.mk'
+		configfile='$configFolder/config_tools_cross.mk'
 		CROSS_CC=$(cat $configfile | grep CROSS_CC | cut -d '=' -f2)
 		CROSS_CXX=$(cat $configfile | grep CROSS_CXX | cut -d '=' -f2)
 
@@ -699,7 +704,7 @@ options_hard_arch () {
 }
 
 options_patch () {
-	configfile='.config/config_options_patch.mk'	
+	configfile='$configFolder/config_options_patch.mk'	
 	[ ! -f "$configfile" ] && echo "PATCH=" > $configfile
 	active=$(cat $configfile | grep PATCH | cut -d '=' -f2)
 	
@@ -742,11 +747,11 @@ options () {
 	hard_arch=''
 	warning=''
 	optimisation=''
-	[ -f '.config/config_options_hard_arch.mk' ] &&  hard_arch=$(cat '.config/config_options_hard_arch.mk' | grep HARD_ARCH | cut -d '=' -f2)
-	[ -f '.config/config_options_warning.mk' ] &&  warning=$(cat '.config/config_options_warning.mk' | grep WARNING | cut -d '=' -f2)
-	[ -f '.config/config_options_optimisation.mk' ] &&  optimisation=$(cat '.config/config_options_optimisation.mk' | grep OPTIMISATION | cut -d '=' -f2)
-	[ -f '.config/config_options_linkage.mk' ] &&  linkage=$(cat '.config/config_options_linkage.mk' | grep LINKAGE | cut -d '=' -f2)
-	[ -f '.config/config_options_outType.mk' ] &&  out=$(cat '.config/config_options_outType.mk' | grep OUT_DLL | cut -d '=' -f2)
+	[ -f '$configFolder/config_options_hard_arch.mk' ] &&  hard_arch=$(cat '$configFolder/config_options_hard_arch.mk' | grep HARD_ARCH | cut -d '=' -f2)
+	[ -f '$configFolder/config_options_warning.mk' ] &&  warning=$(cat '$configFolder/config_options_warning.mk' | grep WARNING | cut -d '=' -f2)
+	[ -f '$configFolder/config_options_optimisation.mk' ] &&  optimisation=$(cat '$configFolder/config_options_optimisation.mk' | grep OPTIMISATION | cut -d '=' -f2)
+	[ -f '$configFolder/config_options_linkage.mk' ] &&  linkage=$(cat '$configFolder/config_options_linkage.mk' | grep LINKAGE | cut -d '=' -f2)
+	[ -f '$configFolder/config_options_outType.mk' ] &&  out=$(cat '$configFolder/config_options_outType.mk' | grep OUT_DLL | cut -d '=' -f2)
 
 	dialog --cancel-label "Back" \
 		--title "option" \
@@ -769,7 +774,7 @@ options () {
 			selectWinodw \
 				"niveau de warning" \
 				"radiolist" \
-				".config/config_options_warning.mk" \
+				"$configFolder/config_options_warning.mk" \
 				"Back" \
 				"WARNING" \
 				"${warningType[*]}" \
@@ -780,7 +785,7 @@ options () {
 			selectWinodw \
 				"type d'optimisation" \
 				"radiolist" \
-				".config/config_options_optimisation.mk" \
+				"$configFolder/config_options_optimisation.mk" \
 				"Back" \
 				"OPTIMISATION" \
 				"${optimisationType[*]}" \
@@ -791,7 +796,7 @@ options () {
 			selectWinodw \
 				"type de linkage" \
 				"radiolist" \
-				".config/config_options_linkage.mk" \
+				"$configFolder/config_options_linkage.mk" \
 				"Back" \
 				"LINKAGE" \
 				"${linkageType[*]}" \
@@ -802,7 +807,7 @@ options () {
 			checkWindow \
 				"debug option" \
 				"checklist" \
-				".config/config_options_debug.mk" \
+				"$configFolder/config_options_debug.mk" \
 				"Back" \
 				"${debugTypes[*]}"
 			options
@@ -811,7 +816,7 @@ options () {
 			selectWinodw \
 				"type de binaire produit" \
 				"radiolist" \
-				".config/config_options_outType.mk" \
+				"$configFolder/config_options_outType.mk" \
 				"Back" \
 				"OUT_DLL" \
 				"${outType[*]}" \
@@ -821,35 +826,8 @@ options () {
 	esac
 }
 
-path () {
-	configfile='.config/config_path.mk'	
-	[ ! -f "$configfile" ] && echo "ROOT_DIR=bin" > $configfile && echo "EXEC=exec" >> $configfile && echo "OUTFOLDER=out" >> $configfile && echo "SOURCE_DIR=src" >> $configfile && echo "DOC_DIR=doc" >> $configfile && echo "PATCH_DIR=patch" >> $configfile
-	items=$(awk -F\= '{print $1,$2}' $configfile)
-	dialog --menu "Path config" $HEIGH $WIDTH $LINES $items 2> $tmpFile
-
-	retval=$?
-	parameter=$(cat $tmpFile)
-
-	[ $retval -eq 0 ] && tochange=$parameter || return 1
-
-	val=$(awk -F\= -v x=$tochange '$1==x {print $2}' $configfile)
-	dialog --inputbox "Enter new value($tochange)" 0 0 $val 2> $tmpFile
-
-	dialog --title "Confirmation"  --yesno "Commit ?" 0 0
-	case $? in
-		0) 	newval=$(cat $tmpFile)
-			awk -v x=$tochange -v n=$newval ' BEGIN {FS=OFS="="}$1==x {$2=n} {print} ' $configfile > $configfile.tmp
-			mv $configfile.tmp $configfile
-			;;
-		1|255) dialog --infobox "No Changes done" 0 0
-			sleep 2
-			;;
-	esac
-	dialog --textbox $configfile 0 0
-}
-
 mode () {
-	configfile='.config/config_mode.mk'	
+	configfile='$configFolder/config_mode.mk'	
 	[ ! -f "$configfile" ] && echo "MODE=debug" > $configfile
 	mode=$(cat $configfile | grep MODE | cut -d '=' -f2)
 
@@ -906,10 +884,20 @@ main () {
 		2) 	options
 			main
 			;;
-		3) 	path
+		3)  editWindow \
+				"${pathType[*]}" \
+				"$configFolder/config_path.mk" \
+				"${pathValue[*]}"
 			main
 			;;
-		4) 	mode
+		4) 	selectWinodw \
+				"mode de sortie" \
+				"radiolist" \
+				"$configFolder/config_mode.mk" \
+				"Back" \
+				"MODE" \
+				"${modeType[*]}" \
+				"${modeInfos[*]}"
 			main
 			;;
 		5) 	patch
@@ -926,5 +914,11 @@ main () {
 
 main $0
 
+echo "rewrite makefile [Y/n] ?"
+read < $rep 
 
+if [ "$rep" != "n" ] || [ "$rep" != "N" ]; then
+	rm makefile
+	printMake
+fi
 
