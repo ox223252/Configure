@@ -31,10 +31,10 @@ do
 done
 
 if [ "$INSTALL" != "" ]; then
-	sudo apt-get install -y --force-yes $INSTALL
+	sudo apt-get install -y -f $INSTALL
 fi
 
-# si un fichier nomé . config existe on le supprime et on 
+# si un fichier nomé .config existe on le supprime et on 
 # créait quoi qu'il arrive un dossier .config
 tmpFile=/tmp/config_dialog
 
@@ -241,12 +241,36 @@ C_OBJ=\$(C_SRC:.c=.o)
 
 OBJ=\$(C_OBJ) \$(CPP_OBJ)
 
-all: \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) .config \$(ROOT_DIR)/\$(OUTFOLDER)
+all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) .config \$(ROOT_DIR)/\$(OUTFOLDER)
 	@echo \"+=======================================+\"
 	@echo \"|	\\\\033[1;92mBuid done\\\\033[0m\\t\\t\\t|\"
 	@echo \"| for hard_arch : \\\\033[1;92m\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\\\\033[0m   \\t\\t|\"
 	@echo \"| in : \\\\033[1;92m\$(MODE)\\\\033[0m mode \t\t\t|\"
 	@echo \"+=======================================+\"
+
+testVar:
+	@echo \"assert input var, do not remove this else it should be \\\\033[1;31mdangerous\\\\033[0m\"
+ifeq (\$(ROOT_DIR),/)
+	@echo \"\\\\033[1;91mVar test ROOT_DIR not valides\\\\033[0m\"
+	@exit 1
+endif
+ifeq (\$(ROOT_DIR),)
+	@echo \"\\\\033[1;91mVar test ROOT_DIR not valides\\\\033[0m\"
+	@exit 1
+endif
+ifeq (\$(SOURCE_DIR),)
+	@echo \"\\\\033[1;91mVar test SOURCE_DIR not valides\\\\033[0m\"
+	@exit 1
+endif
+ifeq (\$(EXEC),)
+	@echo \"\\\\033[1;91mVar test EXEC not valides\\\\033[0m\"
+	@exit 1
+endif
+ifeq (\$(OUTFOLDER),)
+	@echo \"\\\\033[1;91mVar test OUTFOLDER not valides\\\\033[0m\"
+	@exit 1
+endif
+	@echo \"\\\\033[1;92mVar tests valides, continue\\\\033[0m\"
 
 \$(ROOT_DIR):
 	@\$(shell [ -d \"\$(ROOT_DIR)\" ] || mkdir -p \"\$(ROOT_DIR)\" )
@@ -295,7 +319,7 @@ mrproper: clean cleanDump cleanDoc
 
 empty: mrproper
 	@echo \"#!/bin/bash\" > script.sh
-	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((configure)|(\.+)|(src)|(patch)|(res)|(.git))\$\$\\\")\' >> script.sh
+	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"^((configure)|(\.+)|(src)|(patch)|(res)|(.git)|(lib))\$\$\\\")\' >> script.sh
 	@chmod +x script.sh
 	@./script.sh
 
