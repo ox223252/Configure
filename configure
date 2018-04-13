@@ -51,8 +51,8 @@ warningInfos=( "standard" \
 	"pas_de_warnning" \
 	"tous_warning_activés" \
 	)
-outType=( "dynamique" \
-	"static" \
+outType=( "static" \
+	"dynamique" \
 	)
 outInfos=( "executable" \
 	"shared_lib" \
@@ -107,7 +107,7 @@ saveLast=4
 [ "$EDITOR" == "" ] && [ -f /usr/bin/vi ] && EDITOR="vi"
 
 #verification de la presence des paquet necessaires et proposition d'installation
-PACKETS=" gcc g++ xutils-dev dialog" 
+PACKETS=" gcc g++ xutils-dev dialog"
 for TMP in $PACKETS
 do
 	dpkg -s $TMP 2> .log 1> /dev/null
@@ -126,7 +126,7 @@ if [ "$INSTALL" != "" ]; then
 	sudo apt-get install -y -f $INSTALL
 fi
 
-# si un fichier nomé .config existe on le supprime et on 
+# si un fichier nomé .config existe on le supprime et on
 # créait quoi qu'il arrive un dossier .config
 tmpFile=/tmp/config_dialog
 
@@ -164,7 +164,7 @@ configfile="$configFolder/config_options_hard_arch.mk"
 	echo "HARD_ARCH=natif" > $configfile
 
 # work dir
-configfile="$configFolder/config_path.mk"	
+configfile="$configFolder/config_path.mk"
 [ ! -f "$configfile" ] && \
 	echo "ROOT_DIR=bin" > $configfile && \
 	echo "EXEC=exec" >> $configfile && \
@@ -174,7 +174,7 @@ configfile="$configFolder/config_path.mk"
 	echo "PATCH_DIR=patch" >> $configfile
 
 # patch save
-configfile="$configFolder/config_options_patch.mk"	
+configfile="$configFolder/config_options_patch.mk"
 [ ! -f "$configfile" ] && \
 	echo "PATCH=" > $configfile
 
@@ -222,14 +222,18 @@ else
 	LDFLAGS+=\$(LIB)
 endif
 
-ifeq (\$(MODE),release)	
+ifeq (\$(MODE),release)
 	FLAGS+= -D'MODE_RELEASE'
-else	
+else
 	FLAGS+= -D'MODE_DEBUG'
 endif
 
 ifeq (\$(LINKAGE),static)
 	LDFLAGS+= -static
+endif
+
+ifeq (\$(OUT_DLL),on)
+	LDFLAGS+= -shared
 endif
 
 ifeq (\$(WARNING),all)
@@ -315,7 +319,7 @@ cible:
 	@echo \"GDB=\$(GDB)\" >> .last_config
 	@echo \"LINKAGE=\$(LINKAGE)\" >> .last_config
 	@echo \"OUT_DLL=\$(OUT_DLL)\" >> .last_config
-	
+
 docs:
 	@doxywizard doc/Doxyfile
 
@@ -338,7 +342,7 @@ cleanDoc:
 	rm -f -r doc/man/*
 	rm -f -r doc/rtf/*
 
-cleanDump:	
+cleanDump:
 	rm -f -r \$(ROOT_DIR)/\$(OUTFOLDER)/*
 
 mrproper: clean cleanDump cleanDoc
@@ -388,7 +392,7 @@ done
 
 [ ! -f makefile ] && printMake && exit
 
-checkWindow () 
+checkWindow ()
 {
 	# $1 title
 	# $2 winType
@@ -490,7 +494,7 @@ selectWinodw ()
 
 	values=()
 	active=$(cat $configfile | grep $ID | cut -d '=' -f2)
-	
+
 	inputLength=${#input[@]}
 
 	PARAMS=""
@@ -505,7 +509,7 @@ selectWinodw ()
 
 		PARAMS="$PARAMS $i ${info[$i]} ${value[$i]}"
 	done
-	
+
 	dialog $cancel \
 		--radiolist \
 		"$title" \
@@ -547,8 +551,9 @@ editWindow ()
 	$EDITOR -c $configfile
 }
 
-tool_natif () {
-	configfile='$configFolder/config_tools_natif.mk'	
+tool_natif ()
+{
+	configfile="$configFolder/config_tools_natif.mk"
 	[ ! -f "$configfile" ] && echo "CC=gcc" > $configfile && echo "CXX=g++" >> $configfile
 	items=$(awk -F\= '{print $1,$2}' $configfile)
 	dialog --menu "Natif" $HEIGH $WIDTH $LINES $items 2> $tmpFile
@@ -574,11 +579,12 @@ tool_natif () {
 	dialog --textbox $configfile 0 0
 }
 
-tool_cross () {
-	configfile='$configFolder/config_tools_cross.mk'
+tool_cross ()
+{
+	configfile="$configFolder/config_tools_cross.mk"
 	[ ! -f "$configfile" ] && echo "LABEL=arm" > $configfile  && echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile
 	items=$(awk -F\= '{print $1,$2}' $configfile)
-	dialog --menu "cross" $HEIGH $WIDTH $LINES $items 2> $tmpFile	
+	dialog --menu "cross" $HEIGH $WIDTH $LINES $items 2> $tmpFile
 
 	retval=$?
 	parameter=$(cat $tmpFile)
@@ -601,7 +607,8 @@ tool_cross () {
 	dialog --textbox $configfile 0 0
 }
 
-tools () {
+tools ()
+{
 	dialog --cancel-label "Back" \
 		--title "SLAMer" \
 		--menu "Tools chaine" $HEIGH $WIDTH $LINES \
@@ -642,14 +649,15 @@ tools () {
 	esac
 }
 
-options_hard_arch () {
-	configfile='$configFolder/config_options_hard_arch.mk'	
+options_hard_arch ()
+{
+	configfile="$configFolder/config_options_hard_arch.mk"
 	[ ! -f "$configfile" ] && echo "HARD_ARCH=natif" > $configfile
 	active=$(cat $configfile | grep HARD_ARCH | cut -d '=' -f2)
-	
-	labelfile='$configFolder/config_tools_cross.mk'
+
+	labelfile="$configFolder/config_tools_cross.mk"
 	[ -f "$labelfile" ] && crossTool=$(cat $labelfile | grep LABEL | cut -d '=' -f2)
-	
+
 	cross="off"
 	natif="off"
 	case $active in
@@ -677,7 +685,7 @@ options_hard_arch () {
 	esac
 
 	if [ $cross == "on" ]; then
-		configfile='$configFolder/config_tools_cross.mk'
+		configfile="$configFolder/config_tools_cross.mk"
 		CROSS_CC=$(cat $configfile | grep CROSS_CC | cut -d '=' -f2)
 		CROSS_CXX=$(cat $configfile | grep CROSS_CXX | cut -d '=' -f2)
 
@@ -709,11 +717,12 @@ options_hard_arch () {
 	fi
 }
 
-options_patch () {
-	configfile='$configFolder/config_options_patch.mk'	
+options_patch ()
+{
+	configfile="$configFolder/config_options_patch.mk"
 	[ ! -f "$configfile" ] && echo "PATCH=" > $configfile
 	active=$(cat $configfile | grep PATCH | cut -d '=' -f2)
-	
+
 	incremental="off"
 	differentiel="off"
 	decremental="off"
@@ -749,15 +758,16 @@ options_patch () {
 	esac
 }
 
-options () { 
+options ()
+{
 	hard_arch=''
 	warning=''
 	optimisation=''
-	[ -f '$configFolder/config_options_hard_arch.mk' ] &&  hard_arch=$(cat '$configFolder/config_options_hard_arch.mk' | grep HARD_ARCH | cut -d '=' -f2)
-	[ -f '$configFolder/config_options_warning.mk' ] &&  warning=$(cat '$configFolder/config_options_warning.mk' | grep WARNING | cut -d '=' -f2)
-	[ -f '$configFolder/config_options_optimisation.mk' ] &&  optimisation=$(cat '$configFolder/config_options_optimisation.mk' | grep OPTIMISATION | cut -d '=' -f2)
-	[ -f '$configFolder/config_options_linkage.mk' ] &&  linkage=$(cat '$configFolder/config_options_linkage.mk' | grep LINKAGE | cut -d '=' -f2)
-	[ -f '$configFolder/config_options_outType.mk' ] &&  out=$(cat '$configFolder/config_options_outType.mk' | grep OUT_DLL | cut -d '=' -f2)
+	[ -f "$configFolder/config_options_hard_arch.mk" ] &&  hard_arch=$(cat "$configFolder/config_options_hard_arch.mk" | grep HARD_ARCH | cut -d '=' -f2)
+	[ -f "$configFolder/config_options_warning.mk" ] &&  warning=$(cat "$configFolder/config_options_warning.mk" | grep WARNING | cut -d '=' -f2)
+	[ -f "$configFolder/config_options_optimisation.mk" ] &&  optimisation=$(cat "$configFolder/config_options_optimisation.mk" | grep OPTIMISATION | cut -d '=' -f2)
+	[ -f "$configFolder/config_options_linkage.mk" ] &&  linkage=$(cat "$configFolder/config_options_linkage.mk" | grep LINKAGE | cut -d '=' -f2)
+	[ -f "$configFolder/config_options_outType.mk" ] &&  out=$(cat "$configFolder/config_options_outType.mk" | grep OUT_DLL | cut -d '=' -f2)
 
 	dialog --cancel-label "Back" \
 		--title "option" \
@@ -832,8 +842,9 @@ options () {
 	esac
 }
 
-mode () {
-	configfile='$configFolder/config_mode.mk'	
+mode ()
+{
+	configfile="$configFolder/config_mode.mk"
 	[ ! -f "$configfile" ] && echo "MODE=debug" > $configfile
 	mode=$(cat $configfile | grep MODE | cut -d '=' -f2)
 
@@ -863,11 +874,13 @@ mode () {
 	esac
 }
 
-patch () {
+patch ()
+{
 	sleep 1
 }
 
-main () {	
+main ()
+{
 	dialog --cancel-label "Exit" \
 		--title "$1" \
 		--menu "Compilation Configuration" $HEIGH $WIDTH $LINES \
@@ -880,23 +893,39 @@ main () {
 
 	retv=$?
 	choice=$(cat $tmpFile)
-	[ $retv -eq 1 -o $retv -eq 255 ] && rm $tmpFile && clear && exit
+
+	if [ $retv -eq 1 -o $retv -eq 255 ]; then
+		rm $tmpFile
+		clear
+		echo "update makefile [Y/n] ?"
+		read scan
+
+		if [ "$scan" != "n" ] || [ "$scan" != "N" ]; then
+			rm makefile
+			printMake
+		fi
+		exit
+	fi
 
 
 	case $choice in
-		1) 	tools
+		1)
+			tools
 			main
 			;;
-		2) 	options
+		2)
+			options
 			main
 			;;
-		3)  editWindow \
+		3)
+			editWindow \
 				"${pathType[*]}" \
 				"$configFolder/config_path.mk" \
 				"${pathValue[*]}"
 			main
 			;;
-		4) 	selectWinodw \
+		4)
+			selectWinodw \
 				"mode de sortie" \
 				"radiolist" \
 				"$configFolder/config_mode.mk" \
@@ -906,10 +935,20 @@ main () {
 				"${modeInfos[*]}"
 			main
 			;;
-		5) 	patch
+		5)
+			patch
 			main
 			;;
-		6) 	clear
+		6)
+			clear
+			echo "update makefile [Y/n] ?"
+			read scan
+
+			if [ "$scan" != "n" ] || [ "$scan" != "N" ]; then
+				rm makefile
+				printMake
+			fi
+
 			make
 			echo "press [Enter] to continue"
 			read scan
@@ -919,12 +958,4 @@ main () {
 }
 
 main $0
-
-echo "rewrite makefile [Y/n] ?"
-read < $rep 
-
-if [ "$rep" != "n" ] || [ "$rep" != "N" ]; then
-	rm makefile
-	printMake
-fi
 
