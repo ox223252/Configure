@@ -41,7 +41,8 @@ archTest=("HARD_ARCH" \
 	"GPROF" \
 	"GDB" \
 	"LINKAGE" \
-	"EQ_OUT_DLL" \
+	"OUT_DLL" \
+	"FLAGS" \
 	)
 warningType=( "std" \
 	"none" \
@@ -145,6 +146,11 @@ if [ ! -f "$configFolder/config_path.mk" ]; then
 	done
 fi
 
+# flags
+configfile="$configFolder/config_tools_flags.mk"
+[ ! -f "$configfile" ] && \
+	echo "FLAGS+= -D'BY_LINUX_MAKEFILE'" > $configfile
+
 # navtive tools
 configfile="$configFolder/config_tools_natif.mk"
 [ ! -f "$configfile" ] && \
@@ -181,6 +187,10 @@ configfile="$configFolder/config_options_patch.mk"
 [ ! -f "$configfile" ] && \
 	echo "PATCH=" > $configfile
 
+
+
+
+
 # création du makefile
 printMake () {
 	echo "# Made by 0x223252" > makefile
@@ -209,26 +219,7 @@ ifeq (\$(MODE),)
 	MODE=debug
 endif
 
-
-FLAGS+= -D'BY_LINUX_MAKEFILE'
-
-" >> makefile
-
-inputLength=${#archTest[@]}
-
-for (( i=0; i<${inputLength}; i++ ))
-do
-	echo "LAST_${archTest[$i]}=null" >> makefile
-	echo "LAST_${archTest[$i]}=\$(shell [ -f \".last_config\" ] && cat .last_config | grep ${archTest[$i]} | cut -d '=' -f2)" >> makefile
-	echo "EQ_${archTest[$i]}=\$(shell [ -f \".last_config\" ] && [ \"\$(${archTest[$i]})\" = \"\$(LAST_${archTest[$i]})\" ] && echo true)" >> makefile
-	echo "" >> makefile
-	echo "ifneq (\$(EQ_${archTest[$i]}),true)" >> makefile
-	echo "	DEPEND=mrproper" >> makefile
-	echo "endif" >> makefile
-	echo "" >> makefile
-done
-
-printf "ifneq (\$(HARD_ARCH),natif)
+ifneq (\$(HARD_ARCH),natif)
 	CXX=\$(CROSS_CXX)
 	CC=\$(CROSS_CC)
 	LDFLAGS+=\$(CROSS_LIB)
@@ -256,7 +247,31 @@ else ifeq (\$(WARNING), none)
 	FLAGS+= -w
 endif
 
+ifeq (\$(GPROF),on)
+	FLAGS+= -pg
+	LDFLAGS+= -pg
+endif
+
+ifeq (\$(GDB),on)
+	FLAGS+= -g
+	LDFLAGS+= -g
+endif
+
 " >> makefile
+
+inputLength=${#archTest[@]}
+
+for (( i=0; i<${inputLength}; i++ ))
+do
+	echo "LAST_${archTest[$i]}=null" >> makefile
+	echo "LAST_${archTest[$i]}=\$(shell [ -f \".last_config\" ] && cat .last_config | grep ^${archTest[$i]} | cut -d '=' -f2-)" >> makefile
+	echo "EQ_${archTest[$i]}=\$(shell [ -f \".last_config\" ] && [ \"\$(${archTest[$i]})\" = \"\$(LAST_${archTest[$i]})\" ] && echo true)" >> makefile
+	echo "" >> makefile
+	echo "ifneq (\$(EQ_${archTest[$i]}),true)" >> makefile
+	echo "	DEPEND=mrproper" >> makefile
+	echo "endif" >> makefile
+	echo "" >> makefile
+done
 
 inputLength=${#dataLibs[@]}
 
@@ -268,17 +283,7 @@ do
 	echo "" >> makefile
 done
 
-printf "ifeq (\$(GPROF),on)
-	FLAGS+= -pg
-	LDFLAGS+= -pg
-endif
-
-ifeq (\$(GDB),on)
-	FLAGS+= -g
-	LDFLAGS+= -g
-endif
-
-ifeq (\$(FULL_CPP),on)
+printf "ifeq (\$(FULL_CPP),on)
 	CC=\$(CXX)
 endif
 
@@ -325,16 +330,17 @@ printf "	@echo \"\\\\033[1;92mVar tests valides, continue\\\\033[0m\"
 
 cible:
 	@echo  > .last_config
-	@echo \"HARD_ARCH=\$(HARD_ARCH)\" >> .last_config
-	@echo \"TARGET=\$(TARGET)\" >> .last_config
-	@echo \"MODE=\$(MODE)\" >> .last_config
-	@echo \"WARNING=\$(WARNING)\" >> .last_config
-	@echo \"GPROF=\$(GPROF)\" >> .last_config
-	@echo \"GDB=\$(GDB)\" >> .last_config
-	@echo \"LINKAGE=\$(LINKAGE)\" >> .last_config
-	@echo \"OUT_DLL=\$(OUT_DLL)\" >> .last_config
+" >> makefile
 
-docs:
+inputLength=${#archTest[@]}
+
+for (( i=0; i<${inputLength}; i++ ))
+do
+	echo "	@echo \"${archTest[$i]}=\$(${archTest[$i]})\" >> .last_config" >> makefile
+done
+echo >> makefile
+
+printf "docs:
 	@doxywizard doc/Doxyfile
 
 \$(ROOT_DIR)/\$(EXEC): \$(OBJ)
@@ -398,9 +404,9 @@ inputLength=${#archTest[@]}
 
 for (( i=0; i<${inputLength}; i++ ))
 do
-	echo "	@echo \"LAST_${archTest[$i]}=\"\$(LAST_${archTest[$i]})" >> makefile
-	echo "	@echo \"${archTest[$i]}=\"\$(${archTest[$i]})" >> makefile
-	echo "	@echo \"EQ_${archTest[$i]}=\"\$(EQ_${archTest[$i]})" >> makefile
+	echo "	@echo \"LAST_${archTest[$i]}=\$(LAST_${archTest[$i]})\"" >> makefile
+	echo "	@echo \"${archTest[$i]}=\$(${archTest[$i]})\"" >> makefile
+	echo "	@echo \"EQ_${archTest[$i]}=\\033[1;93m\$(EQ_${archTest[$i]})\\033[0m\"" >> makefile
 done
 }
 
@@ -626,38 +632,44 @@ tools ()
 	dialog --cancel-label "Back" \
 		--title "SLAMer" \
 		--menu "Tools chaine" $HEIGH $WIDTH $LINES \
-			1 "Natif" \
-			2 "Additional native libs" \
-			3 "Cross tool" \
-			4 "Additional cross libs " \
-			5 "Additional flags" 2> $tmpFile
+			1 "libs" \
+			2 "flags" \
+			3 "Natif tools" \
+			4 "Additional native libs" \
+			5 "Cross tools" \
+			6 "Additional cross libs " 2> $tmpFile
 
 	retv=$?
 	choice=$(cat $tmpFile)
 
 	case $choice in
-		1) 	tool_natif
+		1) 	checkWindow \
+				"debug option" \
+				"checklist" \
+				"$configFolder/config_tools_libs.mk" \
+				"--nocancel" \
+				"${dataLibs[*]}"
 			tools
 			;;
 		2) 	editWindow \
+				"A_FLAGS" \
+				"$configFolder/config_tools_flags.mk"
+			tools
+			;;
+		3) 	tool_natif
+			tools
+			;;
+		4) 	editWindow \
 				"LIB" \
 				"$configFolder/config_tools_natif_lib.mk"
 			tools
 			;;
-		3) 	tool_cross
+		5) 	tool_cross
 			tools
 			;;
-		4) 	editWindow \
+		6) 	editWindow \
 				"CROSS_LIB" \
 				"$configFolder/config_tools_cross_lib.mk"
-			tools
-			;;
-		5) 	checkWindow \
-				"debug option" \
-				"checklist" \
-				"$configFolder/config_tools_flags.mk" \
-				"--nocancel" \
-				"${dataLibs[*]}"
 			tools
 			;;
 	esac
