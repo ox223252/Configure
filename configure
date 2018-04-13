@@ -38,19 +38,27 @@ fi
 # créait quoi qu'il arrive un dossier .config
 tmpFile=/tmp/config_dialog
 
-[ -f .config ] && rm .config
-[ ! -d .config ] && mkdir .config
+[ -f .config ] && \
+	rm .config
+[ ! -d .config ] && \
+	mkdir .config
 
 # navtive tools
 configfile='.config/config_tools_natif.mk'	
-[ ! -f "$configfile" ] && echo "CC=gcc" > $configfile && echo "CXX=g++" >> $configfile
+[ ! -f "$configfile" ] && \
+	echo "CC=gcc" > $configfile && \
+	echo "CXX=g++" >> $configfile
 
 configfile='.config/config_tools_natif_lib.mk'	
-[ ! -f "$configfile" ]&& echo "LIB=" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "LIB=" > $configfile
 
 # cross tools
 configfile='.config/config_tools_cross.mk'
-[ ! -f "$configfile" ] && echo "LABEL=arm" > $configfile  && echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile
+[ ! -f "$configfile" ] && \
+	echo "LABEL=arm" > $configfile && \
+	echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && \
+	echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile
 
 configfile='.config/config_tools_cross_lib.mk'	
 [ ! -f "$configfile" ]&& echo "CROSS_LIB=" > $configfile
@@ -58,39 +66,64 @@ configfile='.config/config_tools_cross_lib.mk'
 
 # native / cross compile flag
 configfile='.config/config_tools_flags.mk'	
-[ ! -f "$configfile" ] && echo "PTHREAD=off" > $configfile && echo "SDL1=off" >> $configfile && echo "SDL2=off" >> $configfile && echo "LDLL=off" >> $configfile
+[ ! -f "$configfile" ] && \
+	echo "PTHREAD=off" > $configfile && \
+	echo "SDL1=off" >> $configfile && \
+	echo "SDL2=off" >> $configfile && \
+	echo "LDLL=off" >> $configfile && \
+	echo "REALTIME=off" >> $configfile && \
+	echo "MATH=off" >> $configfile && \
+	echo "SSL=off" >> $configfile && \
+	echo "CARES=off" >> $configfile && \
+	echo "CRYPTO=off" >> $configfile
 
 
 # hardware hard_arch (natif/cross)
 configfile='.config/config_options_hard_arch.mk'	
-[ ! -f "$configfile" ] && echo "HARD_ARCH=natif" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "HARD_ARCH=natif" > $configfile
 
 configfile='.config/config_options_warning.mk'	
-[ ! -f "$configfile" ] && echo "WARNING=std" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "WARNING=std" > $configfile
 
 configfile='.config/config_options_linkage.mk'	
-[ ! -f "$configfile" ] && echo "LINKAGE=dynamique" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "LINKAGE=dynamique" > $configfile
 	
 configfile='.config/config_options_optimisation.mk'	
-[ ! -f "$configfile" ] && echo "OPTIMISATION=std" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "OPTIMISATION=std" > $configfile
 
 configfile='.config/config_options_outType.mk'
-[ ! -f "$configfile" ] && echo "OUT_DLL=off" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "OUT_DLL=off" > $configfile
 
 configfile='.config/config_options_debug.mk'	
-[ ! -f "$configfile" ] && echo "GDB=off" > $configfile && echo "GPROF=off" >> $configfile && echo "FULL_CPP=off" >> $configfile
+[ ! -f "$configfile" ] && \
+	echo "GDB=off" > $configfile && \
+	echo "GPROF=off" >> $configfile && \
+	echo "FULL_CPP=off" >> $configfile
 
 # work dir
 configfile='.config/config_path.mk'	
-[ ! -f "$configfile" ] && echo "ROOT_DIR=bin" > $configfile && echo "EXEC=exec" >> $configfile && echo "OUTFOLDER=out" >> $configfile && echo "SOURCE_DIR=src" >> $configfile && echo "DOC_DIR=doc" >> $configfile && echo "PATCH_DIR=patch" >> $configfile
+[ ! -f "$configfile" ] && \
+	echo "ROOT_DIR=bin" > $configfile && \
+	echo "EXEC=exec" >> $configfile && \
+	echo "OUTFOLDER=out" >> $configfile && \
+	echo "SOURCE_DIR=src" >> $configfile && \
+	echo "DOC_DIR=doc" >> $configfile && \
+	echo "PATCH_DIR=patch" >> $configfile
 
 # compile mode
 configfile='.config/config_mode.mk'	
-[ ! -f "$configfile" ] && echo "MODE=debug" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "MODE=debug" > $configfile
 
 # patch save
 configfile='.config/config_options_patch.mk'	
-[ ! -f "$configfile" ] && echo "PATCH=" > $configfile
+[ ! -f "$configfile" ] && \
+	echo "PATCH=" > $configfile
 
 configfile='.config.mk'	
 if [ ! -f "$configfile" ]; then 
@@ -189,8 +222,8 @@ else
 	FLAGS+= -D'MODE_DEBUG'
 endif
 
-ifeq (\$(LINKAGE),static)	
-	FLAGS+= -static
+ifeq (\$(LINKAGE),static)
+	LDFLAGS+= -static
 endif
 
 ifeq (\$(WARNING),all)
@@ -212,11 +245,31 @@ ifeq (\$(PTHREAD),on)
 endif
 
 ifeq (\$(SDL1),on)
-	FLAGS+= -lSDL
+	LDFLAGS+= -lSDL
 endif
 
 ifeq (\$(SDL2),on)
-	FLAGS+= -lSDL2
+	LDFLAGS+= -lSDL2
+endif
+
+ifeq (\$(REALTIME),on)
+	LDFLAGS+= -lrt
+endif
+
+ifeq (\$(MATH),on)
+	LDFLAGS+= -lm
+endif
+
+ifeq (\$(SSL),on)
+	LDFLAGS+= -lssl
+endif
+
+ifeq (\$(CARES),on)
+	LDFLAGS+= -lcares
+endif
+
+ifeq (\$(CRYPTO),on)
+	LDFLAGS+= -lcrypto
 endif
 
 ifeq (\$(GPROF),on)
@@ -433,13 +486,23 @@ tool_flags () {
 	sdl1=$(cat $configfile | grep SDL1 | cut  -d '=' -f2)
 	sld2=$(cat $configfile | grep SDL2 | cut  -d '=' -f2)
 	ldll=$(cat $configfile | grep LDLL | cut  -d '=' -f2)
+	rt=$(cat $configfile | grep REALTIME | cut  -d '=' -f2)
+	math=$(cat $configfile | grep MATH | cut  -d '=' -f2)
+	ssl=$(cat $configfile | grep SSL | cut  -d '=' -f2)
+	cares=$(cat $configfile | grep CARES | cut  -d '=' -f2)
+	crypto=$(cat $configfile | grep CRYPTO | cut  -d '=' -f2)
 
 	dialog --nocancel \
 		--checklist "debug option" $HEIGH $WIDTH $LINES \
 		1 "pthread" $pthread \
 		2 "sdl1" $sdl1 \
 		3 "sld2" $sld2 \
-		4 "dll" $ldll 2> $tmpFile
+		4 "dll" $ldll \
+		5 "real time (rt)" $rt \
+		6 "math" $math \
+		7 "ssl" $ssl \
+		8 "cares" $cares\
+		9 "crypto" $crypto 2> $tmpFile
 
 	retval=$?
 	parameter=$(cat $tmpFile)
@@ -448,18 +511,24 @@ tool_flags () {
 	sdl1="off"
 	sdl2="off"
 	ldll="off"
+	rt = "off"
+	math = "off"
+	ssl = "off"
+	cares = "off"
+	crypto = "off"
 
 	for item in $parameter
 	do
 		case $item in
-			1)	pthread="on"
-				;;
-			2)	sdl1="on"
-				;;
-			3)	sdl2="on"
-				;;
-			4)	ldll="on"
-				;;
+			1) pthread="on" ;;
+			2) sdl1="on" ;;
+			3) sdl2="on" ;;
+			4) ldll="on" ;;
+			5) rt="on" ;;
+			6) math="on" ;;
+			7) ssl="on" ;;
+			8) cares="on" ;;
+			9) crypto="on" ;;
 		esac
 	done
 
@@ -467,6 +536,11 @@ tool_flags () {
 	echo "SDL1="$sdl1 >> $configfile
 	echo "SDL2="$sdl2 >> $configfile
 	echo "LDLL="$ldll >> $configfile
+	echo "REALTIME="$rt >> $configfile
+	echo "MATH="$math >> $configfile
+	echo "SSL="$ssl >> $configfile
+	echo "CARES="$cares >> $configfile
+	echo "CRYPTO="$crypto >> $configfile
 }
 
 tools () {
