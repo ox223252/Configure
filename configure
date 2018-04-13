@@ -52,7 +52,7 @@ warningInfos=( "standard" \
 	"tous_warning_activés" \
 	)
 outType=( "static" \
-	"dynamique" \
+	"dynamic" \
 	)
 outInfos=( "executable" \
 	"shared_lib" \
@@ -91,8 +91,8 @@ pathType=( "EXEC" \
 	"LIB_DIR" \
 	)
 pathValue=( "exec" \
+	"out" \
 	"bin" \
-	"." \
 	"doc" \
 	"src" \
 	"patch" \
@@ -171,7 +171,10 @@ configfile="$configFolder/config_path.mk"
 	echo "OUTFOLDER=out" >> $configfile && \
 	echo "SOURCE_DIR=src" >> $configfile && \
 	echo "DOC_DIR=doc" >> $configfile && \
-	echo "PATCH_DIR=patch" >> $configfile
+	echo "PATCH_DIR=patch" >> $configfile && \
+	echo "RESSOURCES_DIR=res" >> $configfile && \
+	echo "CONFIG_DIR=.config" >> $configfile && \
+	echo "LIB_DIR=lib" >> $configfile
 
 # patch save
 configfile="$configFolder/config_options_patch.mk"
@@ -186,15 +189,26 @@ printMake () {
 printf "include $configFolder/*
 
 # project root folder
-ROOT_DIR=.
+ifeq (\$(ROOT_DIR),)
+	ROOT_DIR=.
+endif
 # source folder name
-SOURCE_DIR=src
+ifeq (\$(SOURCE_DIR),)
+	SOURCE_DIR=src
+endif
 # exec folder name
-OUTFOLDER=bin
+ifeq (\$(OUTFOLDER),)
+	OUTFOLDER=bin
+endif
 # exec file name
-EXEC=exec
+ifeq (\$(EXEC),)
+	EXEC=exec
+endif
 # debug / release
-MODE=debug
+ifeq (\$(MODE),)
+	MODE=debug
+endif
+
 
 FLAGS+= -D'BY_LINUX_MAKEFILE'
 
@@ -232,7 +246,7 @@ ifeq (\$(LINKAGE),static)
 	LDFLAGS+= -static
 endif
 
-ifeq (\$(OUT_DLL),on)
+ifeq (\$(OUT_DLL),dynamic)
 	LDFLAGS+= -shared
 endif
 
