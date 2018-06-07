@@ -108,7 +108,7 @@ make HARD_ARCH=arm GDB=on
 
 
 ### Tree examples:
-Ather *git clone*:
+After *git clone*:
 ```shell
 .
 ├── Configure
@@ -124,7 +124,7 @@ Ather *git clone*:
     └── main.c
 ```
 
-Ather *make*:
+After *make*:
 ```shell
 .
 ├── bin
@@ -147,7 +147,7 @@ Ather *make*:
     └── main.o
 ```
 
-Ather *make empty*:
+After *make empty*:
 ```shell
 .
 ├── Configure
