@@ -252,7 +252,8 @@ ifeq (\$(LINKAGE),static)
 endif
 
 ifeq (\$(OUT_DLL),dynamic)
-	LDFLAGS+= -shared
+	FLAGS+= -fPIC
+	LDFLAGS+= -shared -fPIC
 endif
 
 ifeq (\$(WARNING),all)
