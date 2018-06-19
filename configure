@@ -392,16 +392,9 @@ for (( i=$saveLast; i<${inputLength}; i++ ))
 do
 	printf "|(\$(${pathType[$i]}))" >> makefile
 done
-printf ")\$\$|(^\.git))\\\")\' >> script.sh
+printf ")\$\$|(^\.git)|(^README)|(^readme))\\\")\' >> script.sh
 	
-	@echo \'rm -r \$\$(ls -a | grep -v -E \\\"(^((\.+)|(Configure)|(configure)" >> makefile
-
-inputLength=${#pathType[@]}
-for (( i=$saveLast; i<${inputLength}; i++ ))
-do
-	printf "|(\$(${pathType[$i]}))" >> makefile
-done
-printf ")\$\$|(^\.git))\\\")\'
+	@cat script.sh | grep rm
 
 	@chmod +x script.sh
 	@./script.sh
