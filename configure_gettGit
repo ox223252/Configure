@@ -32,9 +32,6 @@ do
 			;;
 	esac
 done
-echo $USER
-echo $SRC
-exit
 
 checkGitRepo ()
 {
@@ -87,7 +84,7 @@ checkGitRepo ()
 
 	for (( i=0; i<${inputLength}; i++ ))
 	do
-		if [ -d "$SRC/${name[${item}]}" ]; then
+		if [ -d "$SRC/${name[${i}]}" ]; then
 			values[${i}]="on"
 		else
 			values[${i}]="off"
@@ -111,12 +108,12 @@ checkGitRepo ()
 	do
 		if [ -d "$SRC/${name[${item}]}" ]; then
 			echo "${name[${item}]} already exist"
+		elif [ -d .git ]; then
+			git submodule add ${url[${item}]} $SRC/${name[${item}]}
 		else
 			git clone ${url[${item}]} $SRC/${name[${item}]}
 		fi
 	done
-	
-	exit
 }
 
 checkGitRepo \
