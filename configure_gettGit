@@ -1,0 +1,126 @@
+#!/bin/bash
+
+MAX_X=$(tput cols)
+MAX_Y=$(tput lines)
+
+WIDTH=60
+HEIGH=20
+LINES=12
+tmpFile="/tmp/rep"
+
+SRC="src"
+USER="ox223252"
+
+for arg in $@
+do
+	case $arg in
+		-h)
+			echo "usage $0 [-u git_USER] [-s SRC_dst]"
+			;;
+		-*)
+			last=$arg
+			;;
+		*)
+			case $last in
+				-u)
+					USER=$arg
+					;;
+				-s)
+					SRC=$arg
+					;;
+			esac
+			;;
+	esac
+done
+echo $USER
+echo $SRC
+exit
+
+checkGitRepo ()
+{
+	# $1 title
+	# $2 winType
+	# $3 cancel
+	# $4 inputs_Names
+	# $4 inputs_Values
+
+	title=$1
+	winType=$2
+	cancel=$3
+
+	user=$4
+
+	rep=$( curl "https://api.github.com/users/$user/repos?per_page=1000" )
+	if [ "$rep" != "" ]; then
+
+		error=$( echo $rep | grep "rate limit exceeded" )
+
+		if [ "$error" != "" ]; then
+			read -p "github API rate limit exceeded, need client id:" CLIENT
+			read -s -p "Votre passwd ? " PASSWD
+
+			rep=$( curl --user "$CLIENT:$PASSWD" "https://api.github.com/users/$user/repos?per_page=1000" )
+		fi
+	fi
+
+	name=( $( echo "$rep" | grep "\"name\"" | grep -v -E "(GNU)|(MIT)" | cut -d'"' -f4 ) )
+	url=( $( echo "$rep" | grep "\"clone_url\"" | cut -d'"' -f4 ) )
+
+	if [ "$name" == "" ] || [ "$url" == "" ]; then
+		echo "something doesn't work"
+		echo "$rep"
+		exit
+	fi
+
+	if [ "$winType" != "checklist" ]; then
+		return
+	fi
+
+	if [ "$cancel" != "--nocancel" ]; then
+		cancel="--cancel-label $cancel"
+	fi
+
+	inputLength=${#name[@]}
+
+	PARAMS=""
+	values=()
+
+	for (( i=0; i<${inputLength}; i++ ))
+	do
+		if [ -d "$SRC/${name[${item}]}" ]; then
+			values[${i}]="on"
+		else
+			values[${i}]="off"
+		fi
+
+		# save params
+		PARAMS="$PARAMS $i ${name[$i]} ${values[$i]}"
+	done
+
+	dialog $cancel \
+		--checklist \
+		"$title" \
+		$HEIGH \
+		$WIDTH \
+		$LINES \
+		$PARAMS 2> $tmpFile
+
+	parameters=$(cat $tmpFile)
+
+	for item in $parameters
+	do
+		if [ -d "$SRC/${name[${item}]}" ]; then
+			echo "${name[${item}]} already exist"
+		else
+			git clone ${url[${item}]} $SRC/${name[${item}]}
+		fi
+	done
+	
+	exit
+}
+
+checkGitRepo \
+	"$USER's git" \
+	"checklist" \
+	"Back" \
+	"$USER"
