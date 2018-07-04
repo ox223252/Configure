@@ -923,7 +923,8 @@ main ()
 			3 "Path" \
 			4 "Mode" \
 			5 "Patch" \
-			6 "Compiler" 2> $tmpFile
+			6 "Git" \
+			7 "Compiler" 2> $tmpFile
 
 	retv=$?
 	choice=$(cat $tmpFile)
@@ -974,6 +975,17 @@ main ()
 			main
 			;;
 		6)
+			clear
+			for (( i=0; i < $MAX_Y / 2; i++ ))
+			do
+				echo "";
+			done
+
+			read -p "git repos owner name ? " gitUser
+			read -p "where git repos should be cloned ? " gitSrc
+			./$0_getGit -u $gitUser -s $gitSrc
+			;;
+		7)
 			clear
 			echo "update makefile [Y/n] ?"
 			read scan
