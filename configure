@@ -362,9 +362,9 @@ printf "docs:
 	\$(CXX) -o \$@ \$^ \$(LDFLAGS)
 
 %%.o: %%.c
-	\$(CC) -c -o \$@ \$< \$(FLAGS)
+	\$(CC) -c -o \$@ \$< \$(FLAGS) -DDATE_BUILD=\\\"\\\\\"`date +'%y.%m.%d %H:%M:%S'`\\\\\"\\\"
 %%.o: %%.cpp
-	\$(CXX) -c -o \$@ \$< \$(FLAGS)
+	\$(CXX) -c -o \$@ \$< \$(FLAGS) -DDATE_BUILD=\\\"\\\\\"`date +'%y.%m.%d %H:%M:%S'`\\\\\"\\\"
 
 
 clean:
