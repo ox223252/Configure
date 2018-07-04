@@ -107,7 +107,7 @@ make HARD_ARCH=arm GDB=on
 ```
 
 
-### Tree examples:
+# N### Tree examples:
 After *git clone*:
 ```shell
 .
@@ -161,4 +161,19 @@ After *make empty*:
     │   ├── function.c
     │   └── function.h
     └── main.c
+```
+
+## Note:
+### Date of compilation:
+To add the date of compilation to your binary file, use the config dialog box, in submenu 'Tool chaine' -> 'falgs' or edit '.config/config_tools_flags.mk' file to add the folowing define:
+```makefile
+FLAGS= -DDATE_BUILD="\"`date +'%y.%m.%d %H:%M:%S'`\""
+```
+
+in your sources add:
+
+```C
+...
+printf ( "date %s\n", DATE_BUILD );
+...
 ```
