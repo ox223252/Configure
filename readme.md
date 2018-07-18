@@ -87,7 +87,7 @@ This cmd will display somes GUI:
 │   └── *see note
 └── Compiler
 ```
-
+##### \*Note:
 The git option will request a github name and a clone root directory. Once it's done, the script will use curl to request to github the repo's name.
 
 If git init was done, then new repos cloned will be add as git's submodules.
