@@ -1050,6 +1050,4 @@ main ()
 	esac
 }
 
-# main $0
-options_hard_arch
-# options
+main $0
