@@ -5,26 +5,92 @@
 This script will permit to generate and configure makefile easily, with dialog box or config file, for C or C++ projects.
 
 ## Usage
-
-### Get project:
-```shell
-git clone https://github.com/ox223252/Configure.git
-```
-
-Make it executable:
-```shell
-chmod +x Configure/configure
-```
-
+### Init:
 Create makefile and config's folder:
 ```shell
 ./Configure/configure
 ```
+This will display nothing, only create files and folders.
 
 Call dialog box to configure makefile:
 ```shell
 ./Configure/configure
 ```
+This cmd will display somes GUI:
+![ihm](ihm_1.png)
+```SHell
+.
+├── Tool chaine
+│   ├── lib
+│   │   ├── [ ] pthread
+│   │   ├── [ ] sdl.1
+│   │   ├── [ ] sdl.2
+│   │   ├── [ ] realtime
+│   │   ├── [ ] math
+│   │   ├── [ ] ssl
+│   │   ├── [ ] cares
+│   │   ├── [ ] crypto
+│   │   ├── [ ] use_DLL
+│   │   └── [ ] create_DLL
+│   ├── flags
+│   │   └── FLAGS=
+│   ├── Natives tools
+│   │   ├── CC
+│   │   └── CXX
+│   ├── Additionnal natives libs
+│   │   └── LIB=
+│   ├── Cross tools
+│   │   ├── LABEL
+│   │   ├── CC
+│   │   └── CXX
+│   └── Additionnal cross tools
+│   │   └── CROSS_LIB=
+├── Options
+│   ├── Hardware arch : xxx
+│   │   ├── [ ] native compilation
+│   │   └── [ ] cross compilation for arm
+│   ├── Warnning : xxx
+│   │   ├── [ ] standard
+│   │   ├── [ ] no warning
+│   │   └── [ ] all warnings
+│   ├── Optimisation : xxx
+│   │   ├── [ ] none
+│   │   ├── [ ] minimal
+│   │   ├── [ ] binary_size
+│   │   └── [ ] execution_speed
+│   ├── Linkage : xxx
+│   │   ├── [ ] dynamic
+│   │   └── [ ] static
+│   ├── Debug
+│   │   ├── [ ] GDB
+│   │   ├── [ ] GPROF
+│   │   └── [ ] FULL_CPP
+│   └── Out : xxx
+│       ├── [ ] binary
+│       └── [ ] shared_lib
+├── Path
+│   ├── EXEC=
+│   ├── OUTFOLDER=
+│   ├── ROOT_DIR=
+│   ├── DOC_DIR=
+│   ├── SOURCE_DIR=
+│   ├── PATCH_DIR=
+│   ├── RESSOURCES_DIR=
+│   ├── CONFIG_DIR=
+│   └── LIB_DIR=
+├── Mode
+│   ├── [ ] compiled_with_debug_logs
+│   └── [ ] compiled_without_debug_log
+├── Patch
+│   └── [ ] not working
+├── Git
+│   └── *see note
+└── Compiler
+```
+##### \*Note:
+The git option will request a github name and a clone root directory. Once it's done, the script will use curl to request to github the repo's name.
+
+If git init was done, then new repos cloned will be add as git's submodules.
 
 ### Compile projet:
 ```shell
@@ -46,16 +112,16 @@ make mrproper
 ### Clean full project:
 Remove all files generated automaticly (I use it before create tar).
 
- keep folders:
-- .
-- ..
-- .config/\*
-- .git/\*
-- Configure/\*
-- lib/\*
-- patch/\*
-- res/\*
-- src/\*
+keep folders:
+  - .
+  - ..
+  - .config/\*
+  - .git/\*
+  - Configure/\*
+  - lib/\*
+  - patch/\*
+  - res/\*
+  - src/\*
 
 keep files:
 - configure
