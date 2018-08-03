@@ -174,9 +174,12 @@ configfile="$configFolder/config_tools_natif.mk"
 # cross tools
 configfile="$configFolder/config_tools_cross.mk"
 [ ! -f "$configfile" ] && \
-	echo "LABEL=arm" > $configfile && \
-	echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && \
-	echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile
+		echo "LABEL=arm" > $configfile  && \
+		echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && \
+		echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile && \
+		echo "LABEL=w64" > $configfile  && \
+		echo "CROSS_CC=i686-w64-mingw32-gcc" >> $configfile && \
+		echo "CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
 
 # hardware hard_arch (natif/cross)
 configfile="$configFolder/config_options_hard_arch.mk"
@@ -234,8 +237,8 @@ ifeq (\$(MODE),)
 endif
 
 ifneq (\$(HARD_ARCH),natif)
-	CXX=\$(CROSS_CXX)
-	CC=\$(CROSS_CC)
+	CXX=\$(\$(HARD_ARCH)_CROSS_CXX)
+	CC=\$(\$(HARD_ARCH)_CROSS_CC)
 	LDFLAGS+=\$(CROSS_LIB)
 else
 	LDFLAGS+=\$(LIB)
@@ -610,35 +613,51 @@ tool_natif ()
 tool_cross ()
 {
 	configfile="$configFolder/config_tools_cross.mk"
-	[ ! -f "$configfile" ] && echo "LABEL=arm" > $configfile  && echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile
-	items=$(awk -F\= '{print $1,$2}' $configfile)
-	dialog --menu "cross" $HEIGH $WIDTH $LINES $items 2> $tmpFile
 
-	retval=$?
-	parameter=$(cat $tmpFile)
+	[ ! -f "$configfile" ] &&
+		echo "LABEL=arm" > $configfile  &&
+		echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile &&
+		echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile &&
+		echo "LABEL=w64" > $configfile  &&
+		echo "CROSS_CC=i686-w64-mingw32-gcc" >> $configfile &&
+		echo "CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
 
-	[ $retval -eq 0 ] && tochange=$parameter || return 1
+	values=()
+	labels=($(cat $configfile | grep LABEL | cut -d '=' -f2 ))
 
-	val=$(awk -F\= -v x=$tochange '$1==x {print $2}' $configfile)
-	dialog --inputbox "Enter new value($tochange)" 0 0 $val 2> $tmpFile
+	inputLength=${#labels[@]}
 
-	dialog --title "Confirmation"  --yesno "Commit ?" 0 0
-	case $? in
-		0) 	newval=$(cat $tmpFile)
-			awk -v x=$tochange -v n=$newval ' BEGIN {FS=OFS="="}$1==x {$2=n} {print} ' $configfile > $configfile.tmp
-			mv $configfile.tmp $configfile
+	PARAMS=""
+
+	for (( i=0; i<${inputLength}; i++ ))
+	do
+		PARAMS="$PARAMS $i ${labels[$i]}"
+	done
+	PARAMS="$PARAMS $i New"
+
+		echo $PARAMS
+		sleep 2
+
+	dialog --cancel-label "Back" \
+		--menu "Cross tools chaine" $HEIGH $WIDTH $LINES \
+			$PARAMS 2> $tmpFile
+
+	retv=$?
+	choice=$(cat $tmpFile)
+
+	case $choice in
+		$i)
+			echo new
 			;;
-		1|255) dialog --infobox "No Changes done" 0 0
-			sleep 2
+		*)
+			echo "HARD_ARCH=${labels[$i]}" > $configFolder/config_options_hard_arch.mk
 			;;
 	esac
-	dialog --textbox $configfile 0 0
 }
 
 tools ()
 {
 	dialog --cancel-label "Back" \
-		--title "SLAMer" \
 		--menu "Tools chaine" $HEIGH $WIDTH $LINES \
 			1 "libs" \
 			2 "flags" \
@@ -690,38 +709,53 @@ options_hard_arch ()
 	active=$(cat $configfile | grep HARD_ARCH | cut -d '=' -f2)
 
 	labelfile="$configFolder/config_tools_cross.mk"
-	[ -f "$labelfile" ] && crossTool=$(cat $labelfile | grep LABEL | cut -d '=' -f2)
+	[ -f "$labelfile" ] && crossTool=($(cat $labelfile | grep LABEL | cut -d '=' -f2))
 
-	cross="off"
 	natif="off"
 	case $active in
 		natif)
 			natif="on"
 			;;
-		*)
-			cross="on"
-			;;
 	esac
+
+	inputLength=${#crossTool[@]}
+
+	PARAMS="0 natif $natif"
+	for (( i=0; i<${inputLength}; i++ ))
+	do
+		if [ "$active" == "${crossTool[$i]}" ]; then
+			PARAMS="$PARAMS "$(( $i + 1 ))" ${crossTool[$i]} on"
+		else
+			PARAMS="$PARAMS "$(( $i + 1 ))" ${crossTool[$i]} off"
+		fi
+	done
+
+	echo $PARAMS
 
 	dialog --cancel-label "Back" \
 		--radiolist "choix de la cible de compilation" $HEIGH $WIDTH $LINES \
-		1 "compilé en natif" $natif\
-		2 "corss compilé pour "$crossTool $cross 2> $tmpFile
+		$PARAMS 2> $tmpFile
 
 	retv=$?
 	choice=$(cat $tmpFile)
 
+	echo $choice
+
 	case $choice in
-		1)	echo "HARD_ARCH=natif" > $configfile
+		''|0)	echo "HARD_ARCH=natif" > $configfile
+			natif="on"
 			;;
-		2)	echo "HARD_ARCH="$crossTool > $configfile
+		*)	choice=$(( $choice - 1 ))
+			echo "HARD_ARCH="${crossTool[$choice]} > $configfile
+			natif="off"
 			;;
 	esac
+	echo $natif
 
-	if [ $cross == "on" ]; then
+	if [ "$natif" == "off" ]; then
 		configfile="$configFolder/config_tools_cross.mk"
-		CROSS_CC=$(cat $configfile | grep CROSS_CC | cut -d '=' -f2)
-		CROSS_CXX=$(cat $configfile | grep CROSS_CXX | cut -d '=' -f2)
+		CROSS_CC=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CC | cut -d '=' -f2)
+		CROSS_CXX=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CXX | cut -d '=' -f2)
 
 		if [ "$CROSS_CC" == "arm-linux-gnueabi-gcc" ]; then
 			dpkg -s gcc-arm-linux-gnueabi 2> .log 1> /dev/null
@@ -744,6 +778,20 @@ options_hard_arch ()
 				read INSTALL_GCC_ARM
 				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
 					INSTALL+= g++-arm-linux-gnueabi
+				fi
+			fi
+			rm .log
+		fi
+
+		if [ "$CROSS_CXX" == "i686-w64-mingw32-gcc" ] ||
+			[ "$CROSS_CXX" == "i686-w64-mingw32-g++" ]; then
+			dpkg -s mingw-w64 2> .log 1> /dev/null
+			if [ "$(cat .log)" != "" ]; then
+				echo "/gccg++-w64 is missing, you need it to continue."
+				echo "would you want to install it ? (Y/n)"
+				read INSTALL_GCC_ARM
+				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
+					INSTALL+= mingw-w64
 				fi
 			fi
 			rm .log
@@ -1003,5 +1051,6 @@ main ()
 	esac
 }
 
-main $0
-
+# main $0
+options_hard_arch
+# options
