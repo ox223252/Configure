@@ -40,15 +40,15 @@ This cmd will display somes GUI:
 │   ├── Additionnal natives libs
 │   │   └── LIB=
 │   ├── Cross tools
-│   │   ├── LABEL
-│   │   ├── CC
-│   │   └── CXX
+│   │   ├── LABEL=<name>
+│   │   ├── <name>_CC
+│   │   └── <name>_CXX
 │   └── Additionnal cross tools
 │   │   └── CROSS_LIB=
 ├── Options
 │   ├── Hardware arch : xxx
 │   │   ├── [ ] native compilation
-│   │   └── [ ] cross compilation for arm
+│   │   └── [ ] cross compilation for <name>
 │   ├── Warnning : xxx
 │   │   ├── [ ] standard
 │   │   ├── [ ] no warning
