@@ -161,11 +161,23 @@ the makefile config can be overwrite manually to change the output with this val
 | CONFIG_DIR | .config 		| name of config folder |
 | CC 		| gcc			| C compiler [natif] |
 | CXX 		| g++			| C++ compiler [natif] |
-| LABEL 	| arm			| label for cross tool |
+| LABEL** 	| arm			| label for cross tool |
 | HARD_ARCH | natif			| LABEL[use for next compilation] |
-| CROSS_CC 	| arm-linux-gnueabi-gcc | C compiler [cross] |
-| CROSS_CXX | arm-linux-gnueabi-g++ | C++ compiler [cross] |
+| arm_CROSS_CC** 	| arm-linux-gnueabi-gcc | C compiler arm |
+| arm_CROSS_CXX** | arm-linux-gnueabi-g++ | C++ compiler arm |
+| w64_CROSS_CC** 	| i686-w64-mingw-gcc | C compiler windows 64 bits |
+| w64_CROSS_CXX** | i686-w64-mingw-g++ | C++ compiler windows 64 bits |
 | LIB 		|  				 | path of additionals libs |
+
+
+#### \*\*Note:
+The LABEL defined should be defined for each compilation tool set. The value  of defined LABEL should be used as prefix for CROSS_CC and CROSS_CXX define as this :
+```shell
+LABEL=arm
+arm_CROSS_CC=...
+arm_CROSS_CXX=...
+```
+their is not limitation number for the cross tool definitions.
 
 for example this command will generate a cross compiled binary for arm with gdb activated.
 ```shell
@@ -229,7 +241,7 @@ After *make empty*:
     └── main.c
 ```
 
-## Note:
+## Auto defines:
 ### Date of compilation:
 To add the date of compilation to your binary file in your sources code add :
 
