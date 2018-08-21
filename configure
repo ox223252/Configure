@@ -175,11 +175,11 @@ configfile="$configFolder/config_tools_natif.mk"
 configfile="$configFolder/config_tools_cross.mk"
 [ ! -f "$configfile" ] && \
 		echo "LABEL=arm" > $configfile  && \
-		echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && \
-		echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile && \
-		echo "LABEL=w64" > $configfile  && \
-		echo "CROSS_CC=i686-w64-mingw32-gcc" >> $configfile && \
-		echo "CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
+		echo "arm_CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && \
+		echo "arm_CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile && \
+		echo "LABEL=w64" >> $configfile  && \
+		echo "w64_CROSS_CC=i686-w64-mingw32-gcc" >> $configfile && \
+		echo "w64_CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
 
 # hardware hard_arch (natif/cross)
 configfile="$configFolder/config_options_hard_arch.mk"
@@ -316,7 +316,7 @@ OBJ=\$(C_OBJ) \$(CPP_OBJ)
 all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) \$(ROOT_DIR)/\$(OUTFOLDER)
 	@echo \"+=======================================+\"
 	@echo \"|	\\\\033[1;92mBuid done\\\\033[0m\\t\\t\\t|\"
-	@echo \"| for hard_arch : \\\\033[1;92m\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\\\\033[0m   \\t\\t|\"
+	@printf \"| for hard_arch : \\\\033[1;92m%s\\\\033[0m   \\t\\t|\" \$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)
 	@echo \"| in : \\\\033[1;92m\$(MODE)\\\\033[0m mode \t\t\t|\"
 	@echo \"+=======================================+\"
 
@@ -616,11 +616,11 @@ tool_cross ()
 
 	[ ! -f "$configfile" ] &&
 		echo "LABEL=arm" > $configfile  &&
-		echo "CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile &&
-		echo "CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile &&
-		echo "LABEL=w64" > $configfile  &&
-		echo "CROSS_CC=i686-w64-mingw32-gcc" >> $configfile &&
-		echo "CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
+		echo "arm_CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile &&
+		echo "arm_CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile &&
+		echo "LABEL=w64" >> $configfile  &&
+		echo "w64_CROSS_CC=i686-w64-mingw32-gcc" >> $configfile &&
+		echo "w64_CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
 
 	values=()
 	labels=($(cat $configfile | grep LABEL | cut -d '=' -f2 ))
@@ -635,9 +635,6 @@ tool_cross ()
 	done
 	PARAMS="$PARAMS $i New"
 
-		echo $PARAMS
-		sleep 2
-
 	dialog --cancel-label "Back" \
 		--menu "Cross tools chaine" $HEIGH $WIDTH $LINES \
 			$PARAMS 2> $tmpFile
@@ -647,10 +644,10 @@ tool_cross ()
 
 	case $choice in
 		$i)
-			echo new
+			nano $configfile
 			;;
 		*)
-			echo "HARD_ARCH=${labels[$i]}" > $configFolder/config_options_hard_arch.mk
+			# echo "HARD_ARCH=${labels[$i]}" > $configFolder/config_options_hard_arch.mk
 			;;
 	esac
 }
@@ -752,10 +749,13 @@ options_hard_arch ()
 	esac
 	echo $natif
 
+
 	if [ "$natif" == "off" ]; then
 		configfile="$configFolder/config_tools_cross.mk"
 		CROSS_CC=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CC | cut -d '=' -f2)
 		CROSS_CXX=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CXX | cut -d '=' -f2)
+
+		INSTALL=""
 
 		if [ "$CROSS_CC" == "arm-linux-gnueabi-gcc" ]; then
 			dpkg -s gcc-arm-linux-gnueabi 2> .log 1> /dev/null
@@ -764,7 +764,7 @@ options_hard_arch ()
 				echo "would you want to install it ? (Y/n)"
 				read INSTALL_GCC_ARM
 				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
-					INSTALL+= gcc-arm-linux-gnueabi
+					INSTALL+=" gcc-arm-linux-gnueabi"
 				fi
 			fi
 			rm .log
@@ -777,7 +777,7 @@ options_hard_arch ()
 				echo "would you want to install it ? (Y/n)"
 				read INSTALL_GCC_ARM
 				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
-					INSTALL+= g++-arm-linux-gnueabi
+					INSTALL+=" g++-arm-linux-gnueabi"
 				fi
 			fi
 			rm .log
@@ -791,10 +791,15 @@ options_hard_arch ()
 				echo "would you want to install it ? (Y/n)"
 				read INSTALL_GCC_ARM
 				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
-					INSTALL+= mingw-w64
+					INSTALL+=" mingw-w64"
 				fi
 			fi
 			rm .log
+		fi
+
+		if [ "$INSTALL" != "" ]; then
+			echo "sudo apt-get install $INSTALL"
+			sudo apt-get install $INSTALL
 		fi
 	fi
 }
