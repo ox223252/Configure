@@ -314,11 +314,11 @@ C_OBJ=\$(C_SRC:.c=.o)
 OBJ=\$(C_OBJ) \$(CPP_OBJ)
 
 all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) \$(ROOT_DIR)/\$(OUTFOLDER)
-	@echo \"+=======================================+\"
-	@echo \"|	\\\\033[1;92mBuid done\\\\033[0m\\t\\t\\t|\"
-	@printf \"| for hard_arch : \\\\033[1;92m%s\\\\033[0m   \\t\\t|\" \$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)
-	@echo \"| in : \\\\033[1;92m\$(MODE)\\\\033[0m mode \t\t\t|\"
-	@echo \"+=======================================+\"
+	@printf \"+=======================================+\\\\n\"
+	@printf \"|      \\\\033[1;92m%%-22s\\\\033[0m           |\\\\n\" \"Buid done\"
+	@printf \"| for hard_arch : \\\\033[1;92m%%-22s\\\\033[0m|\\\\n\" \"\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\"
+	@printf \"| in mode : \\\\033[1;92m%%-22s\\\\033[0m      |\\\\n\" \"\$(MODE)\"
+	@printf \"+=======================================+\\\\n\"
 
 testVar:
 	@echo \"assert input var, do not remove this else it should be \\\\033[1;31mdangerous\\\\033[0m\"
