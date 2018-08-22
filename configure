@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+
 INSTALL=
 
 MAX_X=$(tput cols)
@@ -160,26 +161,37 @@ if [ ! -f "$configFolder/config_path.mk" ]; then
 	done
 fi
 
-# flags
-configfile="$configFolder/config_tools_flags.mk"
-[ ! -f "$configfile" ] && \
-	echo "FLAGS+= -D'BY_LINUX_MAKEFILE'" > $configfile
-
-# navtive tools
-configfile="$configFolder/config_tools_natif.mk"
-[ ! -f "$configfile" ] && \
-	echo "CC=gcc" > $configfile && \
-	echo "CXX=g++" >> $configfile
-
 # cross tools
-configfile="$configFolder/config_tools_cross.mk"
+createToolsFile()
+{
+
+	echo "# flags for alls targets" > $1
+	echo "FLAGS+= -D'BY_LINUX_MAKEFILE'" >> $1
+	echo "" >> $1
+	echo "# tools / flags / libs only for native target" >> $1
+	echo "CC=gcc" >> $1
+	echo "CXX=g++" >> $1
+	echo "natif_FLAGS+=" >> $1
+	echo "natif_LIBS+=" >> $1
+	echo "" >> $1
+	echo "# tools / flags / libs only for arm target" >> $1
+	echo "LABEL=arm" >> $1
+	echo "arm_CROSS_CC=arm-linux-gnueabi-gcc" >> $1
+	echo "arm_CROSS_CXX=arm-linux-gnueabi-g++" >> $1
+	echo "arm_FLAGS+=" >> $1
+	echo "arm_LIBS+=" >> $1
+	echo "" >> $1
+	echo "# tools / flags / libs only for w64 target" >> $1
+	echo "LABEL=w64" >> $1
+	echo "w64_CROSS_CC=i686-w64-mingw32-gcc" >> $1
+	echo "w64_CROSS_CXX=i686-w64-mingw32-g++" >> $1
+	echo "w64_FLAGS+=" >> $1
+	echo "w64_LIBS+=" >> $1
+}
+
+configfile="$configFolder/config_tools.mk"
 [ ! -f "$configfile" ] && \
-		echo "LABEL=arm" > $configfile  && \
-		echo "arm_CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile && \
-		echo "arm_CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile && \
-		echo "LABEL=w64" >> $configfile  && \
-		echo "w64_CROSS_CC=i686-w64-mingw32-gcc" >> $configfile && \
-		echo "w64_CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
+	createToolsFile $configfile
 
 # hardware hard_arch (natif/cross)
 configfile="$configFolder/config_options_hard_arch.mk"
@@ -203,9 +215,6 @@ configfile="$configFolder/config_path.mk"
 configfile="$configFolder/config_options_patch.mk"
 [ ! -f "$configfile" ] && \
 	echo "PATCH=" > $configfile
-
-
-
 
 
 # création du makefile
@@ -239,9 +248,11 @@ endif
 ifneq (\$(HARD_ARCH),natif)
 	CXX=\$(\$(HARD_ARCH)_CROSS_CXX)
 	CC=\$(\$(HARD_ARCH)_CROSS_CC)
-	LDFLAGS+=\$(CROSS_LIB)
+	FLAGS+=\$(\$(HARD_ARCH)_FLAGS)
+	LDFLAGS+=\$(\$(HARD_ARCH)_LIBS)
 else
-	LDFLAGS+=\$(LIB)
+	LDFLAGS+=\$(natif_LIBS)
+	FLAGS+=\$(natif_FLAGS)
 endif
 
 ifeq (\$(MODE),release)
@@ -423,6 +434,24 @@ done
 
 [ ! -f makefile ] && printMake && exit
 
+feedFile ()
+{
+	ID=($1)
+	configfile=$2
+	values=($3)
+
+	if [ ! -f "$configfile" ]; then
+		inputLength=${#ID[@]}
+
+		echo "" > $configfile
+
+		for (( i=0; i<${inputLength}; i++ ))
+		do
+			echo "${ID[$i]}=${values[$i]}" >> $configfile
+		done
+	fi
+}
+
 checkWindow ()
 {
 	# $1 title
@@ -568,24 +597,16 @@ editWindow ()
 	configfile=$2
 	values=($3)
 
-	if [ ! -f "$configfile" ]; then
-		inputLength=${#ID[@]}
-
-		echo "" > $configfile
-
-		for (( i=0; i<${inputLength}; i++ ))
-		do
-			echo "${ID[$i]}=${values[$i]}" >> $configfile
-		done
-	fi
+	feedFile $ID $configfile $values
 
 	$EDITOR -c $configfile
 }
 
 tool_natif ()
 {
-	configfile="$configFolder/config_tools_natif.mk"
-	[ ! -f "$configfile" ] && echo "CC=gcc" > $configfile && echo "CXX=g++" >> $configfile
+	configfile="$configFolder/config_tools.mk"
+	[ ! -f "$configfile" ] && 
+		createToolsFile $configfile
 	items=$(awk -F\= '{print $1,$2}' $configfile)
 	dialog --menu "Natif" $HEIGH $WIDTH $LINES $items 2> $tmpFile
 
@@ -612,15 +633,10 @@ tool_natif ()
 
 tool_cross ()
 {
-	configfile="$configFolder/config_tools_cross.mk"
+	configfile="$configFolder/config_tools.mk"
 
 	[ ! -f "$configfile" ] &&
-		echo "LABEL=arm" > $configfile  &&
-		echo "arm_CROSS_CC=arm-linux-gnueabi-gcc" >> $configfile &&
-		echo "arm_CROSS_CXX=arm-linux-gnueabi-g++" >> $configfile &&
-		echo "LABEL=w64" >> $configfile  &&
-		echo "w64_CROSS_CC=i686-w64-mingw32-gcc" >> $configfile &&
-		echo "w64_CROSS_CXX=i686-w64-mingw32-g++" >> $configfile
+		createToolsFile $configfile
 
 	values=()
 	labels=($(cat $configfile | grep LABEL | cut -d '=' -f2 ))
@@ -676,16 +692,19 @@ tools ()
 			tools
 			;;
 		2) 	editWindow \
-				"A_FLAGS" \
-				"$configFolder/config_tools_flags.mk"
+				"FLAGS" \
+				"$configFolder/config_tools.mk"
 			tools
 			;;
-		3) 	tool_natif
+		3) 	# tool_natif
+			editWindow \
+				"natifs" \
+				"$configFolder/config_tools.mk"
 			tools
 			;;
 		4) 	editWindow \
 				"LIB" \
-				"$configFolder/config_tools_natif_lib.mk"
+				"$configFolder/config_tools.mk"
 			tools
 			;;
 		5) 	tool_cross
@@ -693,7 +712,7 @@ tools ()
 			;;
 		6) 	editWindow \
 				"CROSS_LIB" \
-				"$configFolder/config_tools_cross_lib.mk"
+				"$configFolder/config_tools.mk"
 			tools
 			;;
 	esac
