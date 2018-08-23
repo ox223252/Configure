@@ -32,19 +32,24 @@ This cmd will display somes GUI:
 │   │   ├── [ ] crypto
 │   │   ├── [ ] use_DLL
 │   │   └── [ ] create_DLL
-│   ├── flags
-│   │   └── FLAGS=
-│   ├── Natives tools
-│   │   ├── CC
-│   │   └── CXX
-│   ├── Additionnal natives libs
-│   │   └── LIB=
-│   ├── Cross tools
-│   │   ├── LABEL=<name>
-│   │   ├── <name>_CC
-│   │   └── <name>_CXX
-│   └── Additionnal cross tools
-│   │   └── CROSS_LIB=
+│   └── Tools**
+│       ├── FLAGS=
+│       ├── CC=
+│       ├── CXX=
+│       ├── natif_FLAGS=
+│       ├── natif_LIBS=
+│       ├── LABEL=arm
+│       ├── arm_CROSS_CC=
+│       ├── arm_CROSS_CXX=
+│       ├── arm_FLAGS=
+│       ├── arm_LIBS=
+│       ├── arm_EXEC_AFTER=
+│       ├── LABEL=w64
+│       ├── w64_CROSS_CC=
+│       ├── w64_CROSS_CXX=
+│       ├── w64_FLAGS=
+│       ├── w64_LIBS=
+│       └── w64_EXEC_AFTER=
 ├── Options
 │   ├── Hardware arch : xxx
 │   │   ├── [ ] native compilation
@@ -90,6 +95,17 @@ This cmd will display somes GUI:
 ##### \*Note:
 The git option will request a github name and a clone root directory. Once it's done, the script will use curl to request to github the repo's name.
 
+#### \*\*Note:
+The Tools file could be feed with new toolchains without limitation, you just need to follow the template exemple. The LABEL definition should be defined for each compilation tool set.
+```
+LABEL=<name>
+<name>_CC=toolchain for C compilation
+<name>_CXX=toolchain for C++ compilation
+<name>_FLAGS=flags for this toolchain
+<name>_LIBS=libs for this toolchain
+<name>_EXEC_AFTER=cmd executed once compilation was done (could execute a script)
+```
+
 If git init was done, then new repos cloned will be add as git's submodules.
 
 ### Compile projet:
@@ -132,52 +148,51 @@ make empty
 ### Advanced
 the makefile config can be overwrite manually to change the output with this values:
 
-| var label | default value | available values 	|
-| ---		| ---			| ---				|
-| GDB 		| off 			| on 				|
-| GPROF 	| off 			| on 				|
-| FULL_CPP 	| off 			| on 				|
-| pthread 	| off 			| on 				|
-| sdl.1 	| off 			| on 				|
-| sdl.2		| off 			| on 				|
-| realTime 	| off 			| on 				|
-| path 		| off 			| on 				|
-| ssl 		| off 			| on 				|
-| cares 	| off 			| on 				|
-| crypto 	| off 			| on 				|
-| use_DLL 	| off 			| on 				|
-| create_DLL | off 			| on 				|
-| LINKAGE	| dynamique 	| static			|
-| OPTIMISATION | -O0 		| -O1/-O2/-O3 		|
-| OUT_DLL 	| static 		| dynamic			|
-| WARNING 	| std 			| non/all			|
-| EXEC 		| exec			| name of exec	|
-| OUTFOLDER | out			| name of folder used for exec outputs |
-| ROOT_DIR 	| bin			| name of root folder for exec binary |
-| DOC_DIR 	| doc			| name of documentation |
-| SOURCE_DIR | src 			| name of sources	|
-| RESSOURCES_DIR | res 		| name of ressources[if needed] |
-| LIB_DIR 	| lib 			| name of additionals libs |
-| CONFIG_DIR | .config 		| name of config folder |
-| CC 		| gcc			| C compiler [natif] |
-| CXX 		| g++			| C++ compiler [natif] |
-| LABEL** 	| arm			| label for cross tool |
-| HARD_ARCH | natif			| LABEL[use for next compilation] |
-| arm_CROSS_CC** 	| arm-linux-gnueabi-gcc | C compiler arm |
-| arm_CROSS_CXX** | arm-linux-gnueabi-g++ | C++ compiler arm |
-| w64_CROSS_CC** 	| i686-w64-mingw-gcc | C compiler windows 64 bits |
-| w64_CROSS_CXX** | i686-w64-mingw-g++ | C++ compiler windows 64 bits |
-| LIB 		|  				 | path of additionals libs |
+| var label 		| default value | available values 						|
+| ---				| ---			| ---									|
+| GDB 				| off 			| on 									|
+| GPROF 			| off 			| on 									|
+| FULL_CPP 			| off 			| on 									|
+| pthread 			| off 			| on 									|
+| sdl.1 			| off 			| on 									|
+| sdl.2				| off 			| on 									|
+| realTime 			| off 			| on 									|
+| path 				| off 			| on 									|
+| ssl 				| off 			| on 									|
+| cares 			| off 			| on 									|
+| crypto 			| off 			| on 									|
+| use_DLL 			| off 			| on 									|
+| create_DLL 		| off 			| on 									|
+| LINKAGE			| dynamique 	| static								|
+| OPTIMISATION 		| -O0 			| -O1/-O2/-O3 							|
+| OUT_DLL 			| static 		| dynamic								|
+| WARNING 			| std 			| non/all								|
+| EXEC 				| exec			| name of exec							|
+| OUTFOLDER 		| out			| name of folder used for exec outputs 	|
+| ROOT_DIR 			| bin			| name of root folder for exec binary 	|
+| DOC_DIR 			| doc			| name of documentation 				|
+| SOURCE_DIR 		| src 			| name of sources						|
+| RESSOURCES_DIR 	| res 			| name of ressources[if needed] 		|
+| LIB_DIR 			| lib 			| name of additionals libs 				|
+| CONFIG_DIR 		| .config 		| name of config folder 				|
+| LIB 				|				| path of additionals libs 				|
+| HARD_ARCH 		| natif			| LABEL[use for next compilation] 		|
+| CC 				| gcc			| C compiler [natif] 					|
+| CXX 				| g++			| C++ compiler [natif] 					|
+| natif_FLAGS**		|				|										|
+| natif_LIBS**		|				|										|
+| LABEL** 			| arm/w64		| label for cross tool 					|
+| arm_CROSS_CC**	| arm-linux-gnueabi-gcc | C compiler arm Linux			|
+| arm_CROSS_CXX**	| arm-linux-gnueabi-g++ | C++ compiler arm Linux		|
+| arm_FLAGS**		|				|										|
+| arm_LIBS**		|				|										|
+| arm_EXEC_AFTER**	|				|										|
+| w64_CROSS_CC** 	| i686-w64-mingw-gcc | C compiler windows 64 bits 		|
+| w64_CROSS_CXX**	| i686-w64-mingw-g++ | C++ compiler windows 64 bits 	|
+| w64_FLAGS**		|				|										|
+| w64_LIBS**		|				|										|
+| w64_EXEC_AFTER**	|				|										|
 
-
-#### \*\*Note:
-The LABEL defined should be defined for each compilation tool set. The value  of defined LABEL should be used as prefix for CROSS_CC and CROSS_CXX define as this :
-```shell
-LABEL=arm
-arm_CROSS_CC=...
-arm_CROSS_CXX=...
-```
-their is not limitation number for the cross tool definitions.
 
 for example this command will generate a cross compiled binary for arm with gdb activated.
 ```shell
