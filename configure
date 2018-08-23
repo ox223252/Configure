@@ -164,29 +164,30 @@ fi
 # cross tools
 createToolsFile()
 {
-
 	echo "# flags for alls targets" > $1
-	echo "FLAGS+= -D'BY_LINUX_MAKEFILE'" >> $1
+	echo "FLAGS= -D'BY_LINUX_MAKEFILE'" >> $1
 	echo "" >> $1
 	echo "# tools / flags / libs only for native target" >> $1
 	echo "CC=gcc" >> $1
 	echo "CXX=g++" >> $1
-	echo "natif_FLAGS+=" >> $1
-	echo "natif_LIBS+=" >> $1
+	echo "natif_FLAGS=" >> $1
+	echo "natif_LIBS=" >> $1
 	echo "" >> $1
 	echo "# tools / flags / libs only for arm target" >> $1
 	echo "LABEL=arm" >> $1
 	echo "arm_CROSS_CC=arm-linux-gnueabi-gcc" >> $1
 	echo "arm_CROSS_CXX=arm-linux-gnueabi-g++" >> $1
-	echo "arm_FLAGS+=" >> $1
-	echo "arm_LIBS+=" >> $1
+	echo "arm_FLAGS=" >> $1
+	echo "arm_LIBS=" >> $1
+	echo "arm_EXEC_AFTER=" >> $1
 	echo "" >> $1
 	echo "# tools / flags / libs only for w64 target" >> $1
 	echo "LABEL=w64" >> $1
 	echo "w64_CROSS_CC=i686-w64-mingw32-gcc" >> $1
 	echo "w64_CROSS_CXX=i686-w64-mingw32-g++" >> $1
-	echo "w64_FLAGS+=" >> $1
-	echo "w64_LIBS+=" >> $1
+	echo "w64_FLAGS=" >> $1
+	echo "w64_LIBS=" >> $1
+	echo "w64_EXEC_AFTER=" >> $1
 }
 
 configfile="$configFolder/config_tools.mk"
@@ -250,9 +251,11 @@ ifneq (\$(HARD_ARCH),natif)
 	CC=\$(\$(HARD_ARCH)_CROSS_CC)
 	FLAGS+=\$(\$(HARD_ARCH)_FLAGS)
 	LDFLAGS+=\$(\$(HARD_ARCH)_LIBS)
+	EXEC_AFTER=\$(\$(HARD_ARCH)_EXEC_AFTER)
 else
 	LDFLAGS+=\$(natif_LIBS)
 	FLAGS+=\$(natif_FLAGS)
+	EXEC_AFTER=\$(natif_EXEC_AFTER)
 endif
 
 ifeq (\$(MODE),release)
@@ -324,7 +327,7 @@ C_OBJ=\$(C_SRC:.c=.o)
 
 OBJ=\$(C_OBJ) \$(CPP_OBJ)
 
-all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) \$(ROOT_DIR)/\$(OUTFOLDER)
+all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) \$(ROOT_DIR)/\$(OUTFOLDER) exec_after
 	@printf \"+=======================================+\\\\n\"
 	@printf \"|      \\\\033[1;92m%%-22s\\\\033[0m           |\\\\n\" \"Buid done\"
 	@printf \"| for hard_arch : \\\\033[1;92m%%-22s\\\\033[0m|\\\\n\" \"\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\"
@@ -356,6 +359,9 @@ printf "	@echo \"\\\\033[1;92mVar tests valides, continue\\\\033[0m\"
 
 \$(ROOT_DIR)/\$(OUTFOLDER): \$(ROOT_DIR)
 	@\$(shell [ ! -d \"\$(ROOT_DIR)/\$(OUTFOLDER)\" ] && mkdir -p \"\$(ROOT_DIR)/\$(OUTFOLDER)\" )
+
+exec_after:
+	\$(EXEC_AFTER)
 
 cible:
 	@echo  > .last_config
@@ -602,82 +608,78 @@ editWindow ()
 	$EDITOR -c $configfile
 }
 
-tool_natif ()
-{
-	configfile="$configFolder/config_tools.mk"
-	[ ! -f "$configfile" ] && 
-		createToolsFile $configfile
-	items=$(awk -F\= '{print $1,$2}' $configfile)
-	dialog --menu "Natif" $HEIGH $WIDTH $LINES $items 2> $tmpFile
+# tool_natif ()
+# {
+# 	configfile="$configFolder/config_tools.mk"
+# 	[ ! -f "$configfile" ] && 
+# 		createToolsFile $configfile
+# 	items=$(awk -F\= '{print $1,$2}' $configfile)
+# 	dialog --menu "Natif" $HEIGH $WIDTH $LINES $items 2> $tmpFile
 
-	retval=$?
-	parameter=$(cat $tmpFile)
+# 	retval=$?
+# 	parameter=$(cat $tmpFile)
 
-	[ $retval -eq 0 ] && tochange=$parameter || return 1
+# 	[ $retval -eq 0 ] && tochange=$parameter || return 1
 
-	val=$(awk -F\= -v x=$tochange '$1==x {print $2}' $configfile)
-	dialog --inputbox "Enter new value($tochange)" 0 0 $val 2> $tmpFile
+# 	val=$(awk -F\= -v x=$tochange '$1==x {print $2}' $configfile)
+# 	dialog --inputbox "Enter new value($tochange)" 0 0 $val 2> $tmpFile
 
-	dialog --title "Confirmation"  --yesno "Commit ?" 0 0
-	case $? in
-		0) 	newval=$(cat $tmpFile)
-			awk -v x=$tochange -v n=$newval ' BEGIN {FS=OFS="="}$1==x {$2=n} {print} ' $configfile > $configfile.tmp
-			mv $configfile.tmp $configfile
-			;;
-		1|255) dialog --infobox "No Changes done" 0 0
-			sleep 2
-			;;
-	esac
-	dialog --textbox $configfile 0 0
-}
+# 	dialog --title "Confirmation"  --yesno "Commit ?" 0 0
+# 	case $? in
+# 		0) 	newval=$(cat $tmpFile)
+# 			awk -v x=$tochange -v n=$newval ' BEGIN {FS=OFS="="}$1==x {$2=n} {print} ' $configfile > $configfile.tmp
+# 			mv $configfile.tmp $configfile
+# 			;;
+# 		1|255) dialog --infobox "No Changes done" 0 0
+# 			sleep 2
+# 			;;
+# 	esac
+# 	dialog --textbox $configfile 0 0
+# }
 
-tool_cross ()
-{
-	configfile="$configFolder/config_tools.mk"
+# tool_cross ()
+# {
+# 	configfile="$configFolder/config_tools.mk"
 
-	[ ! -f "$configfile" ] &&
-		createToolsFile $configfile
+# 	[ ! -f "$configfile" ] &&
+# 		createToolsFile $configfile
 
-	values=()
-	labels=($(cat $configfile | grep LABEL | cut -d '=' -f2 ))
+# 	values=()
+# 	labels=($(cat $configfile | grep LABEL | cut -d '=' -f2 ))
 
-	inputLength=${#labels[@]}
+# 	inputLength=${#labels[@]}
 
-	PARAMS=""
+# 	PARAMS=""
 
-	for (( i=0; i<${inputLength}; i++ ))
-	do
-		PARAMS="$PARAMS $i ${labels[$i]}"
-	done
-	PARAMS="$PARAMS $i New"
+# 	for (( i=0; i<${inputLength}; i++ ))
+# 	do
+# 		PARAMS="$PARAMS $i ${labels[$i]}"
+# 	done
+# 	PARAMS="$PARAMS $i New"
 
-	dialog --cancel-label "Back" \
-		--menu "Cross tools chaine" $HEIGH $WIDTH $LINES \
-			$PARAMS 2> $tmpFile
+# 	dialog --cancel-label "Back" \
+# 		--menu "Cross tools chaine" $HEIGH $WIDTH $LINES \
+# 			$PARAMS 2> $tmpFile
 
-	retv=$?
-	choice=$(cat $tmpFile)
+# 	retv=$?
+# 	choice=$(cat $tmpFile)
 
-	case $choice in
-		$i)
-			nano $configfile
-			;;
-		*)
-			# echo "HARD_ARCH=${labels[$i]}" > $configFolder/config_options_hard_arch.mk
-			;;
-	esac
-}
+# 	case $choice in
+# 		$i)
+# 			nano $configfile
+# 			;;
+# 		*)
+# 			# echo "HARD_ARCH=${labels[$i]}" > $configFolder/config_options_hard_arch.mk
+# 			;;
+# 	esac
+# }
 
 tools ()
 {
 	dialog --cancel-label "Back" \
 		--menu "Tools chaine" $HEIGH $WIDTH $LINES \
 			1 "libs" \
-			2 "flags" \
-			3 "Natives tools" \
-			4 "Additional natives libs" \
-			5 "Cross tools" \
-			6 "Additional cross libs " 2> $tmpFile
+			2 "Compilations tools / libs / flags" 2> $tmpFile
 
 	retv=$?
 	choice=$(cat $tmpFile)
@@ -692,26 +694,7 @@ tools ()
 			tools
 			;;
 		2) 	editWindow \
-				"FLAGS" \
-				"$configFolder/config_tools.mk"
-			tools
-			;;
-		3) 	# tool_natif
-			editWindow \
-				"natifs" \
-				"$configFolder/config_tools.mk"
-			tools
-			;;
-		4) 	editWindow \
-				"LIB" \
-				"$configFolder/config_tools.mk"
-			tools
-			;;
-		5) 	tool_cross
-			tools
-			;;
-		6) 	editWindow \
-				"CROSS_LIB" \
+				"Tools" \
 				"$configFolder/config_tools.mk"
 			tools
 			;;
@@ -724,7 +707,7 @@ options_hard_arch ()
 	[ ! -f "$configfile" ] && echo "HARD_ARCH=natif" > $configfile
 	active=$(cat $configfile | grep HARD_ARCH | cut -d '=' -f2)
 
-	labelfile="$configFolder/config_tools_cross.mk"
+	labelfile="$configFolder/config_tools.mk"
 	[ -f "$labelfile" ] && crossTool=($(cat $labelfile | grep LABEL | cut -d '=' -f2))
 
 	natif="off"
