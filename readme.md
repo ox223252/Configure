@@ -17,7 +17,9 @@ Call dialog box to configure makefile:
 ./Configure/configure
 ```
 This cmd will display somes GUI:
+
 ![ihm](ihm_1.png)
+
 ```SHell
 .
 ├── Tool chaine
