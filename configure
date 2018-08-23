@@ -16,6 +16,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+# change display between term an X display
+if [ -z $DISPLAY ]; then
+	DIALOG=dialog
+else
+	DIALOG=Xdialog
+fi
+
+VERSION=0.2
+LICENSE=GPLv2
+GITHUB_PATH=https://github.com/ox223252/Configure
 
 INSTALL=
 
@@ -509,7 +519,7 @@ checkWindow ()
 		values[${i}]="off"
 	done
 
-	dialog $cancel \
+	$DIALOG $cancel \
 		--checklist \
 		"$title" \
 		$HEIGH \
@@ -576,7 +586,7 @@ selectWinodw ()
 		PARAMS="$PARAMS $i ${info[$i]} ${value[$i]}"
 	done
 
-	dialog $cancel \
+	$DIALOG $cancel \
 		--radiolist \
 		"$title" \
 		$HEIGH \
@@ -608,75 +618,9 @@ editWindow ()
 	$EDITOR -c $configfile
 }
 
-# tool_natif ()
-# {
-# 	configfile="$configFolder/config_tools.mk"
-# 	[ ! -f "$configfile" ] && 
-# 		createToolsFile $configfile
-# 	items=$(awk -F\= '{print $1,$2}' $configfile)
-# 	dialog --menu "Natif" $HEIGH $WIDTH $LINES $items 2> $tmpFile
-
-# 	retval=$?
-# 	parameter=$(cat $tmpFile)
-
-# 	[ $retval -eq 0 ] && tochange=$parameter || return 1
-
-# 	val=$(awk -F\= -v x=$tochange '$1==x {print $2}' $configfile)
-# 	dialog --inputbox "Enter new value($tochange)" 0 0 $val 2> $tmpFile
-
-# 	dialog --title "Confirmation"  --yesno "Commit ?" 0 0
-# 	case $? in
-# 		0) 	newval=$(cat $tmpFile)
-# 			awk -v x=$tochange -v n=$newval ' BEGIN {FS=OFS="="}$1==x {$2=n} {print} ' $configfile > $configfile.tmp
-# 			mv $configfile.tmp $configfile
-# 			;;
-# 		1|255) dialog --infobox "No Changes done" 0 0
-# 			sleep 2
-# 			;;
-# 	esac
-# 	dialog --textbox $configfile 0 0
-# }
-
-# tool_cross ()
-# {
-# 	configfile="$configFolder/config_tools.mk"
-
-# 	[ ! -f "$configfile" ] &&
-# 		createToolsFile $configfile
-
-# 	values=()
-# 	labels=($(cat $configfile | grep LABEL | cut -d '=' -f2 ))
-
-# 	inputLength=${#labels[@]}
-
-# 	PARAMS=""
-
-# 	for (( i=0; i<${inputLength}; i++ ))
-# 	do
-# 		PARAMS="$PARAMS $i ${labels[$i]}"
-# 	done
-# 	PARAMS="$PARAMS $i New"
-
-# 	dialog --cancel-label "Back" \
-# 		--menu "Cross tools chaine" $HEIGH $WIDTH $LINES \
-# 			$PARAMS 2> $tmpFile
-
-# 	retv=$?
-# 	choice=$(cat $tmpFile)
-
-# 	case $choice in
-# 		$i)
-# 			nano $configfile
-# 			;;
-# 		*)
-# 			# echo "HARD_ARCH=${labels[$i]}" > $configFolder/config_options_hard_arch.mk
-# 			;;
-# 	esac
-# }
-
 tools ()
 {
-	dialog --cancel-label "Back" \
+	$DIALOG --cancel-label "Back" \
 		--menu "Tools chaine" $HEIGH $WIDTH $LINES \
 			1 "libs" \
 			2 "Compilations tools / libs / flags" 2> $tmpFile
@@ -731,7 +675,7 @@ options_hard_arch ()
 
 	echo $PARAMS
 
-	dialog --cancel-label "Back" \
+	$DIALOG --cancel-label "Back" \
 		--radiolist "choix de la cible de compilation" $HEIGH $WIDTH $LINES \
 		$PARAMS 2> $tmpFile
 
@@ -826,7 +770,7 @@ options_patch ()
 			decremental="on"
 			;;
 	esac
-	dialog --cancel-label "Back" \
+	$DIALOG --cancel-label "Back" \
 		--radiolist "type d'optimisation" $HEIGH $WIDTH $LINES \
 		1 "incremental" $incremental\
 		2 "differentiel" $differentiel\
@@ -858,7 +802,7 @@ options ()
 	[ -f "$configFolder/config_options_linkage.mk" ] &&  linkage=$(cat "$configFolder/config_options_linkage.mk" | grep LINKAGE | cut -d '=' -f2)
 	[ -f "$configFolder/config_options_outType.mk" ] &&  out=$(cat "$configFolder/config_options_outType.mk" | grep OUT_DLL | cut -d '=' -f2)
 
-	dialog --cancel-label "Back" \
+	$DIALOG --cancel-label "Back" \
 		--menu "Options de compilation" $HEIGH $WIDTH $LINES \
 			1 "Hardware arch : "$hard_arch \
 			2 "Warnning : "$warning \
@@ -946,7 +890,7 @@ mode ()
 			release="on"
 			;;
 	esac
-	dialog --cancel-label "Back" \
+	$DIALOG --cancel-label "Back" \
 		--radiolist "mode de sortie" 20 61 5 \
 		1 "compilé sans aucun log de debug" $release\
 		2 "compilé avec les logs de debug affichable" $debug 2> $tmpFile
@@ -969,7 +913,7 @@ patch ()
 
 main ()
 {
-	dialog --cancel-label "Exit" \
+	$DIALOG --cancel-label "Exit" \
 		--title "$1" \
 		--menu "Compilation Configuration" $HEIGH $WIDTH $LINES \
 			1 "Tool chaine" \
@@ -978,7 +922,8 @@ main ()
 			4 "Mode" \
 			5 "Patch" \
 			6 "Git" \
-			7 "Build" 2> $tmpFile
+			7 "Build" \
+			8 "About/help" 2> $tmpFile
 
 	retv=$?
 	choice=$(cat $tmpFile)
@@ -1054,7 +999,31 @@ main ()
 			read scan
 			main
 			;;
+		8)
+			helpWindow
+			main
+			;;
 	esac
 }
 
-main $0
+helpWindow()
+{
+$DIALOG --msgbox \
+"  Hello, i'm glad to know you use it. This script is a
+ Makefile generator and configurator, I created it for
+ my personal use, but if you want to use it or improve
+ it, feel free to do it.
+
+Software made by ox223252
+License $LICENSE:
+  Get sources on Github:
+  $GITHUB_PATH
+Version $VERSION" $HEIGH $WIDTH
+}
+
+if [ $# != 0 ]; then
+	helpWindow
+else
+	main
+fi
+	
