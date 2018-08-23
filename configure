@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+export NCURSES_NO_UTF8_ACS=1
+
 INSTALL=
 
 MAX_X=$(tput cols)
