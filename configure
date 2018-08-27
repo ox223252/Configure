@@ -19,12 +19,7 @@
 # correct display
 export NCURSES_NO_UTF8_ACS=1
 
-# change display between term an X display
-if [ -z $DISPLAY ]; then
-	DIALOG=dialog
-else
-	DIALOG=Xdialog
-fi
+DIALOG=dialog
 
 VERSION=0.2
 LICENSE=GPLv2
@@ -1025,8 +1020,19 @@ Version $VERSION" $HEIGH $WIDTH
 }
 
 if [ $# != 0 ]; then
-	helpWindow
-else
-	main
+	for PARAM in $@; do
+		case $PARAM in
+			-h|--help)
+				helpWindow
+				exit
+				;;
+			-x)
+				# change display between term an X display
+				DIALOG=Xdialog
+				;;
+		esac
+	done
 fi
+
+main
 	
