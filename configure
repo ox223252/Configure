@@ -131,7 +131,7 @@ saveLast=4
 [ "$EDITOR" == "" ] && [ -f /usr/bin/vi ] && EDITOR="vi"
 
 #verification de la presence des paquet necessaires et proposition d'installation
-PACKETS=" gcc g++ xutils-dev dialog curl"
+PACKETS=" gcc g++ xutils-dev dialog curl git make"
 for TMP in $PACKETS
 do
 	dpkg -s $TMP 2> .log 1> /dev/null
