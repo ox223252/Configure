@@ -267,3 +267,26 @@ To add the date of compilation to your binary file in your sources code add :
 printf ( "date %s\n", DATE_BUILD );
 ...
 ```
+
+## [Auto main](initMain.md):
+You can use this script to creante and feed a basic main, according with the included libs configs.
+
+The minimal main is defined as it:
+
+```C
+// file auto generated
+
+// INIT_FUNCTION
+
+int main ( int argc, char ** argv )
+{
+	// INIT_VAR
+
+	// INIT_CORE
+
+	// END_CORE
+
+	return ( 0 );
+}
+
+```

@@ -1,0 +1,158 @@
+#!/bin/bash
+# Copyright (C) 2018 name of ox223252
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+if [ $# == 0 ]; then
+	exit
+fi
+
+configDir=false
+logDir=false
+
+SRC=$( cat $1/config_path.mk | grep SOURCE_DIR | cut -d'=' -f2 )
+PATHS=$( ls -R $SRC )
+isMain=$( grep -r main $SRC | grep -E "^$SRC/[^:]*\.c(pp)?:" )
+
+if [ ! -d $SRC ]; then
+	mkdir -p $SRC
+fi
+
+if [ "$isMain" == "" ]; then
+	touch $SRC/main.c
+
+	echo "// file auto generated" >> $SRC/main.c
+	echo >> $SRC/main.c
+	echo >> $SRC/main.c
+	echo "// INIT_FUNCTION" >> $SRC/main.c
+	echo >> $SRC/main.c
+	echo "int main ( int argc, char ** argv )" >> $SRC/main.c
+	echo "{" >> $SRC/main.c
+	echo "	// INIT_VAR" >> $SRC/main.c
+	echo "	// INIT_CORE" >> $SRC/main.c
+	echo "	// END_CORE" >> $SRC/main.c
+
+	for T1 in ${PATHS[@]}
+	do
+		case $T1 in
+			*:) # directory
+				LAST=$T1
+				LAST=$( echo $T1 | cut -d':' -f1 | rev | cut -d'/' -f2- | rev  )
+				;;
+			*.init|*.head) # file
+				printf "$T1 "
+
+				# get content of init
+				if [ "$( echo $LAST | rev | cut -d'/' -f1 | rev )" != "$( echo $T1 | cut -d'.' -f1 )" ]; then
+					# if the init File has not the same name of directory parrent else don't use it
+					printf " \e[31mKO\e[0m\n"
+					continue
+				fi
+
+				readFile="$LAST/init/$T1"
+
+				DIR=$( echo $LAST | sed -e "s/^$SRC/./g" )
+				sed -e "s@\$\(SRC*\)@$DIR@g" -e 's/\r//' $readFile > tmp
+
+				case $T1 in
+					*.init)
+						i=$( cat $SRC/main.c | wc -l )
+
+						if [ "$i" == "0" ]; then
+							i=1
+						fi
+
+						c="a"
+						while read -r line;
+						do
+							if [ "$( echo "$line" | grep -E "^\s*@" )" != "" ]; then
+								# it is a cmd
+								ID=($( echo "$line" | cut -d ' ' -f3-))
+								cmd=($( echo "$line" | cut -d ' ' -f2))
+
+								IFS=' '
+								ID=( $ID )
+								IFS=''
+
+								if [ "$cmd" == "after" ]; then
+									c="a"
+								elif [ "$cmd" == "before" ]; then
+									c="i"
+								fi
+
+								j=0
+								lvl=""
+								while [ "$lvl" == "" ] && [ "${ID[ $j ]}" != "" ];
+								do
+									label=${ID[ $j ]}
+									lvl=$( grep -RnE "// $label" $SRC/main.c | cut -d ':' -f1 )
+
+									if [ "$lvl" != "" ]; then
+										i=$lvl
+									else
+										(( j++ ))
+									fi
+								done
+
+								continue
+							fi
+
+							if [ "$line" == "" ]; then
+								$( sed -s -i "${i}${c}\\ " $SRC/main.c )
+							else
+								$( sed -s -i ${i}${c}.$(echo "${line}") $SRC/main.c )
+								$( sed -i -e "s/^\.//g" $SRC/main.c )
+							fi
+							(( i++ ))
+						done < tmp
+
+						rm tmp
+						printf " \e[32mOK\e[0m\n"
+						;;
+					*.head)
+						i=3
+
+						c="i"
+						while read -r line;
+						do
+							if [ "$( grep "$line" $SRC/main.c )" != "" ]; then
+								# to avoid multiple include of the same line
+								continue
+							fi
+
+							# include the line 
+							if [ "$line" == "" ]; then
+								$( sed -s -i "${i}${c}\\ " $SRC/main.c )
+							else
+								$( sed -s -i ${i}${c}"${line}" $SRC/main.c )
+							fi
+
+							(( i++ ))
+						done < tmp
+						rm tmp
+						printf " \e[32mOK\e[0m\n"
+						;;
+				esac
+				;;
+		esac
+	done
+
+	echo "	return ( 0 );" >> $SRC/main.c
+	echo "}" >> $SRC/main.c
+	echo >> $SRC/main.c
+else
+	echo main exist
+fi
