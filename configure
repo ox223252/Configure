@@ -21,11 +21,12 @@ export NCURSES_NO_UTF8_ACS=1
 
 DIALOG=dialog
 
-VERSION=0.3
+VERSION=0.4
 LICENSE=GPLv2
 GITHUB_PATH=https://github.com/ox223252/Configure
 
 INSTALL=
+PRINT_AT_END=
 
 MAX_X=$(tput cols)
 MAX_Y=$(tput lines)
@@ -181,13 +182,21 @@ createToolsFile()
 	echo "natif_FLAGS=" >> $1
 	echo "natif_LIBS=" >> $1
 	echo "" >> $1
+	echo "# tools / flags / libs only for arm linux target" >> $1
+	echo "LABEL=arm-Linux" >> $1
+	echo "arm-Linux_CROSS_CC=arm-linux-gnueabi-gcc" >> $1
+	echo "arm-Linux_CROSS_CXX=arm-linux-gnueabi-g++" >> $1
+	echo "arm-Linux_FLAGS=" >> $1
+	echo "arm-Linux_LIBS=" >> $1
+	echo "arm-Linux_EXEC_AFTER=" >> $1
+	echo "" >> $1
 	echo "# tools / flags / libs only for arm target" >> $1
 	echo "LABEL=arm" >> $1
-	echo "arm_CROSS_CC=arm-linux-gnueabi-gcc" >> $1
-	echo "arm_CROSS_CXX=arm-linux-gnueabi-g++" >> $1
-	echo "arm_FLAGS=" >> $1
+	echo "arm_CROSS_CC=arm-none-eabi-gcc" >> $1
+	echo "arm_CROSS_CXX=arm-none-eabi-g++" >> $1
+	echo "arm_FLAGS=-std=gnu99 -g -O2 -Wall -mlittle-endian -mthumb -mthumb-interwork -mcpu=cortex-m0 -fsingle-precision-constant -Wdouble-promotion" >> $1
 	echo "arm_LIBS=" >> $1
-	echo "arm_EXEC_AFTER=" >> $1
+	echo "arm_EXEC_AFTER=arm-none-eabi-objcopy -O binary \${EXEC} \${EXEC}.bin" >> $1
 	echo "" >> $1
 	echo "# tools / flags / libs only for w64 target" >> $1
 	echo "LABEL=w64" >> $1
@@ -525,6 +534,11 @@ checkWindow ()
 		$LINES \
 		$PARAMS 2> $tmpFile
 
+
+	retv=$?
+	if [ "$retv" == "1" ]; then
+		return
+	fi
 	parameters=$(cat $tmpFile)
 
 	for item in $parameters
@@ -595,6 +609,10 @@ selectWinodw ()
 	retv=$?
 	choice=$(cat $tmpFile)
 
+	if [ "$retv" == "1" ]; then
+		return
+	fi
+
 	if [ "$ID=${input[$choice]}" != "" ]; then
 		echo "$ID=${input[$choice]}" > $configfile
 	else
@@ -625,6 +643,10 @@ tools ()
 
 	retv=$?
 	choice=$(cat $tmpFile)
+
+	if [ "$retv" == "1" ]; then
+		return
+	fi
 
 	case $choice in
 		1) 	checkWindow \
@@ -680,7 +702,9 @@ options_hard_arch ()
 	retv=$?
 	choice=$(cat $tmpFile)
 
-	echo $choice
+	if [ "$retv" == "1" ]; then
+		return
+	fi
 
 	case $choice in
 		''|0)	echo "HARD_ARCH=natif" > $configfile
@@ -691,11 +715,10 @@ options_hard_arch ()
 			natif="off"
 			;;
 	esac
-	echo $natif
-
 
 	if [ "$natif" == "off" ]; then
-		configfile="$configFolder/config_tools_cross.mk"
+		echo ""
+		configfile="$configFolder/config_tools.mk"
 		CROSS_CC=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CC | cut -d '=' -f2)
 		CROSS_CXX=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CXX | cut -d '=' -f2)
 
@@ -731,12 +754,64 @@ options_hard_arch ()
 			[ "$CROSS_CXX" == "i686-w64-mingw32-g++" ]; then
 			dpkg -s mingw-w64 2> .log 1> /dev/null
 			if [ "$(cat .log)" != "" ]; then
-				echo "/gccg++-w64 is missing, you need it to continue."
+				echo "gcc/g++-w64 is missing, you need it to continue."
 				echo "would you want to install it ? (Y/n)"
 				read INSTALL_GCC_ARM
 				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
 					INSTALL+=" mingw-w64"
 				fi
+			fi
+			rm .log
+		fi
+
+		if [ "$CROSS_CXX" == "arm-none-eabi-gcc" ] ||
+			[ "$CROSS_CXX" == "arm-none-eabi-g++" ]; then
+			arm-none-eabi-gcc -v 2> /dev/null | grep "gcc version" > .log 
+			if [ "$(cat .log)" == "" ]; then
+				echo "gcc/g++-arm is missing, you need it to continue."
+				echo "would you want to install it ? (Y/n)"
+				read INSTALL_GCC_ARM
+				
+				if [ "$INSTALL_GCC_ARM" == "n" ] && [ "$INSTALL_GCC_ARM" == "N" ]; then
+					return;
+				fi
+
+				read -p "Set directory to place arm none tool chaine: " -i $PWD -e DIRECTORY
+
+				if [ -f "$DIRECTORY" ]; then
+					printf "\e[1;31m It's a file\e[0m"
+					sleep 1
+					return
+				elif [ ! -d "$DIRECTORY" ]; then
+					mkdir -v -p "$DIRECTORY"
+					sleep 1
+				fi
+
+				ls $DIRECTORY/gcc-arm-none-eabi-7-2018-q2-update > .log 2> /dev/null
+
+				if [ "$(cat .log)" == "" ]; then
+					wget "https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
+					
+					printf "extract \e[34mgcc-arm-none-eabi-7-2018-q2-update\e[0m to \e[34m$DIRECTORY\e[0m\n"
+					tar -xf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 -C $DIRECTORY
+
+					echo "remove gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
+					rm gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2*
+				fi
+
+				echo "add arm-gcc to path ? (y/N)"
+				read INSTALL_GCC_ARM
+
+				PRINT_AT_END=$PRINT_AT_END"To \e[32mfinish\e[0m install, run the following cmds:\n"
+				if [ "$INSTALL_GCC_ARM" == "y" ] || [ "$INSTALL_GCC_ARM" == "Y" ]; then
+					[ "$( cat ~/.bashrc | grep gcc-arm-none-eabi-7-2018-q2-update )" == "" ] && \
+						echo PATH=\$PATH:$DIRECTORY/gcc-arm-none-eabi-7-2018-q2-update/bin >> ~/.bashrc && \
+						echo export PATH >> ~/.bashrc
+					PRINT_AT_END=$PRINT_AT_END" source ~/.bashrc\n"
+				else
+					PRINT_AT_END=$PRINT_AT_END" PATH=\$PATH:\$pwd/$DIRECTORY/gcc-arm-none-eabi-7-2018-q2-update/bin\n"
+				fi
+				PRINT_AT_END=$PRINT_AT_END"\n"
 			fi
 			rm .log
 		fi
@@ -777,6 +852,10 @@ options_patch ()
 	retv=$?
 	choice=$(cat $tmpFile)
 
+	if [ "$retv" == "1" ]; then
+		return
+	fi
+
 	case $choice in
 		1)	echo "PATCH=incremental" > $configfile
 			;;
@@ -811,6 +890,10 @@ options ()
 
 	retv=$?
 	choice=$(cat $tmpFile)
+
+	if [ "$retv" == "1" ]; then
+		return
+	fi
 
 	case $choice in
 		1) 	options_hard_arch
@@ -896,6 +979,10 @@ mode ()
 	retv=$?
 	choice=$(cat $tmpFile)
 
+	if [ "$retv" == "1" ]; then
+		return
+	fi
+
 	case $choice in
 		1)	echo "MODE=release" > $configfile
 			;;
@@ -930,16 +1017,16 @@ main ()
 	if [ $retv -eq 1 -o $retv -eq 255 ]; then
 		rm $tmpFile
 		clear
-		echo "update makefile [Y/n] ?"
-		read scan
+		# echo "update makefile [Y/n] ?"
+		# read scan
 
-		if [ "$scan" != "n" ] || [ "$scan" != "N" ]; then
-			rm makefile
-			printMake
-		fi
+		# if [ "$scan" != "n" ] || [ "$scan" != "N" ]; then
+		# 	rm makefile
+		# 	printMake
+		# fi
+		printf "$PRINT_AT_END"
 		exit
 	fi
-
 
 	case $choice in
 		1)
