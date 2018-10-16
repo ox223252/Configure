@@ -776,14 +776,16 @@ options_hard_arch ()
 					return;
 				fi
 
-				read -p "Set directory to place arm none tool chaine: " -i $PWD -e DIRECTORY
+				read -p "Set directory to place arm none tool chaine: " -e DIRECTORY
+
+				DIRECTORY=$(eval echo $DIRECTORY)
 
 				if [ -f "$DIRECTORY" ]; then
 					printf "\e[1;31m It's a file\e[0m"
 					sleep 1
 					return
 				elif [ ! -d "$DIRECTORY" ]; then
-					mkdir -v -p "$DIRECTORY"
+					mkdir -v -p $DIRECTORY
 					sleep 1
 				fi
 
@@ -792,7 +794,7 @@ options_hard_arch ()
 				if [ "$(cat .log)" == "" ]; then
 					wget "https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
 					
-					printf "extract \e[34mgcc-arm-none-eabi-7-2018-q2-update\e[0m to \e[34m$DIRECTORY\e[0m\n"
+					printf "extract \e[1;33mgcc-arm-none-eabi-7-2018-q2-update\e[0m to \e[1;33m$DIRECTORY\e[0m\n"
 					tar -xf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2 -C $DIRECTORY
 
 					echo "remove gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2"
