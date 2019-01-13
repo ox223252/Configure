@@ -125,6 +125,20 @@ pathValue=( "exec" \
 	"$configFolder" \
 	"lib" \
 	)
+compilSoft=( "arm-linux-gnueabi-gcc" \
+	"arm-linux-gnueabi-g++" \
+	"arm-linux-gnueabihf-gcc" \
+	"arm-linux-gnueabihf-g++" \
+	"i686-w64-mingw32-gcc" \
+	"i686-w64-mingw32-g++" \
+	)
+compilPacket=( "gcc-arm-linux-gnueabi" \
+	"g++-arm-linux-gnueabi" \
+	"gcc-arm-linux-gnueabihf" \
+	"g++-arm-linux-gnueabihf" \
+	"mingw-w64" \
+	"mingw-w64" \
+	)
 saveLast=4
 
 #select default editor if no one configured
@@ -717,52 +731,30 @@ options_hard_arch ()
 	esac
 
 	if [ "$natif" == "off" ]; then
-		echo ""
+		echo "ici"
 		configfile="$configFolder/config_tools.mk"
 		CROSS_CC=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CC | cut -d '=' -f2)
 		CROSS_CXX=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CXX | cut -d '=' -f2)
 
 		INSTALL=""
 
-		if [ "$CROSS_CC" == "arm-linux-gnueabi-gcc" ]; then
-			dpkg -s gcc-arm-linux-gnueabi 2> .log 1> /dev/null
-			if [ "$(cat .log)" != "" ]; then
-				echo "gcc-arm is missing, you need it to continue."
-				echo "would you want to install it ? (Y/n)"
-				read INSTALL_GCC_ARM
-				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
-					INSTALL+=" gcc-arm-linux-gnueabi"
+		inputLength=${#compilSoft[@]}
+		for (( i=0; i<${inputLength}; i++ ))
+		do
+			if [ "$CROSS_CC" == "${compilSoft[$i]}" ] || [ "$CROSS_CXX" == "${compilSoft[$i]}" ]; then
+				dpkg -s ${compilPacket[$i]} 2> .log 1> /dev/null
+				if [ "$(cat .log)" != "" ]; then
+					printf "\e[1;33m${compilSoft[$i]}\e[0m] is missing, you need it to continue.\n"
+					echo "would you want to install it ? (Y/n)"
+					read INSTALL_TOOL
+					if [ $INSTALL_TOOL != "n" ] && [ $INSTALL_TOOL != "N" ]; then
+						INSTALL+=" ${compilPacket[$i]}"
+					fi
 				fi
+				rm .log
 			fi
-			rm .log
-		fi
-
-		if [ "$CROSS_CXX" == "arm-linux-gnueabi-g++" ]; then
-			dpkg -s g++-arm-linux-gnueabi 2> .log 1> /dev/null
-			if [ "$(cat .log)" != "" ]; then
-				echo "g++-arm is missing, you need it to continue."
-				echo "would you want to install it ? (Y/n)"
-				read INSTALL_GCC_ARM
-				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
-					INSTALL+=" g++-arm-linux-gnueabi"
-				fi
-			fi
-			rm .log
-		fi
-
-		if [ "$CROSS_CXX" == "i686-w64-mingw32-gcc" ] ||
-			[ "$CROSS_CXX" == "i686-w64-mingw32-g++" ]; then
-			dpkg -s mingw-w64 2> .log 1> /dev/null
-			if [ "$(cat .log)" != "" ]; then
-				echo "gcc/g++-w64 is missing, you need it to continue."
-				echo "would you want to install it ? (Y/n)"
-				read INSTALL_GCC_ARM
-				if [ $INSTALL_GCC_ARM != "n" ] && [ $INSTALL_GCC_ARM != "N" ]; then
-					INSTALL+=" mingw-w64"
-				fi
-			fi
-			rm .log
-		fi
+		done
+		read INSTALL_TOOL
 
 		if [ "$CROSS_CXX" == "arm-none-eabi-gcc" ] ||
 			[ "$CROSS_CXX" == "arm-none-eabi-g++" ]; then
