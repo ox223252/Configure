@@ -731,7 +731,6 @@ options_hard_arch ()
 	esac
 
 	if [ "$natif" == "off" ]; then
-		echo "ici"
 		configfile="$configFolder/config_tools.mk"
 		CROSS_CC=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CC | cut -d '=' -f2)
 		CROSS_CXX=$(cat $configfile | grep ${crossTool[$choice]}_CROSS_CXX | cut -d '=' -f2)
@@ -754,7 +753,6 @@ options_hard_arch ()
 				rm .log
 			fi
 		done
-		read INSTALL_TOOL
 
 		if [ "$CROSS_CXX" == "arm-none-eabi-gcc" ] ||
 			[ "$CROSS_CXX" == "arm-none-eabi-g++" ]; then
