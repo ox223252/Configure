@@ -471,6 +471,10 @@ done
 
 [ ! -f makefile ] && printMake && exit
 
+# feed file with KEY=VALUE pair
+# $1: array of KEY
+# $2: file name
+# $3: array of value
 feedFile ()
 {
 	ID=($1)
@@ -489,13 +493,14 @@ feedFile ()
 	fi
 }
 
+# function used to draw a check list
+# $1: title of the window
+# $2: should be set to 'checklist'
+# $3: file name where we can get default value of item and where we store result
+# $4: if set to --nocancel, cancel button will be desabled, else the string will be used as button label
+# $5: array of item label
 checkWindow ()
 {
-	# $1 title
-	# $2 winType
-	# $3 config file
-	# $4 cancel
-	# $5 inputs
 
 	title=$1
 	winType=$2
@@ -567,15 +572,16 @@ checkWindow ()
 	done
 }
 
+# function used to draw a radio list
+# $1: title of the window
+# $2: should be set to 'radiolist'
+# $3: file name where we can get default value of item and where we store result
+# $4: if set to --nocancel, cancel button will be desabled, else the string will be used as button label
+# $5: KEY of used to store active value
+# $6: array of availables value for the KEY
+# $7: array of comment for value available
 selectWinodw ()
 {
-	# $1 title
-	# $2 winType
-	# $3 config file
-	# $4 cancel
-	# $5 ID
-	# $6 options
-	# $7 comment
 
 	title=$1
 	winType=$2
@@ -634,20 +640,24 @@ selectWinodw ()
 	fi
 }
 
+# function used to open editor on sellected file, if file doesn't exit it will be created
+# $1: array of KEY (used to create file)
+# $2: file name
+# $3: array of value
 editWindow ()
 {
-	# $1 ID
-	# $2 config file
-	# $default values
 	ID=($1)
 	configfile=$2
 	values=($3)
 
 	feedFile $ID $configfile $values
 
-	$EDITOR -c $configfile
+	$EDITOR $configfile
 }
 
+# tools chaine menu
+# libs
+# Compilation tools
 tools ()
 {
 	$DIALOG --cancel-label "Back" \
@@ -679,6 +689,8 @@ tools ()
 	esac
 }
 
+# options submenu
+# used to select between harch defined in tools chaine menu
 options_hard_arch ()
 {
 	configfile="$configFolder/config_options_hard_arch.mk"
@@ -815,6 +827,8 @@ options_hard_arch ()
 	fi
 }
 
+# options submenu
+# not used now
 options_patch ()
 {
 	configfile="$configFolder/config_options_patch.mk"
@@ -860,6 +874,14 @@ options_patch ()
 	esac
 }
 
+# options menu, used to change compilations options debug lvl / optiomisations / ...
+# Options de compilation
+# Hardware arch
+# Warnning
+# Optimisation
+# Linkage
+# Debug
+# out
 options ()
 {
 	hard_arch=''
@@ -947,6 +969,9 @@ options ()
 	esac
 }
 
+# mode menu
+# prvide macro who define MODE as RELEASE or DEBUG, 
+# usable to activate or deactivate code
 mode ()
 {
 	configfile="$configFolder/config_mode.mk"
@@ -983,6 +1008,7 @@ mode ()
 	esac
 }
 
+# not used
 patch ()
 {
 	sleep 1
@@ -1009,13 +1035,6 @@ main ()
 	if [ $retv -eq 1 -o $retv -eq 255 ]; then
 		rm $tmpFile
 		clear
-		# echo "update makefile [Y/n] ?"
-		# read scan
-
-		# if [ "$scan" != "n" ] || [ "$scan" != "N" ]; then
-		# 	rm makefile
-		# 	printMake
-		# fi
 		printf "$PRINT_AT_END"
 		exit
 	fi
