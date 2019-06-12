@@ -44,6 +44,7 @@ if [ "$isMain" == "" ]; then
 	echo "	// INIT_VAR" >> $SRC/main.c
 	echo "	// INIT_CORE" >> $SRC/main.c
 	echo "	// END_CORE" >> $SRC/main.c
+	echo "	// END_PROGRAM" >> $SRC/main.c
 
 	for T1 in ${PATHS[@]}
 	do
