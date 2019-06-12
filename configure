@@ -1091,7 +1091,7 @@ main ()
 
 			SRC=$( cat $configFolder/config_path.mk | grep SOURCE_DIR | cut -d'=' -f2 )
 
-			isMain=$( grep -r main $SRC | grep -E "^$SRC/[^:]*\.c(pp)?:" | cut -d':' -f1 | rev | cut -d'/' -f1 | rev )
+			isMain=$( grep -r  -E "( m|^m)ai(n$|n |n\()" $SRC | grep -E "^$SRC/[^:]*\.c(pp)?:" | cut -d':' -f1 | rev | cut -d'/' -f1 | rev )
 			if [ "$isMain" != "" ]; then
 				printf "\e[1;31mmain\e[0m function already defined in \e[1;33m$isMain\e[0m, do you want to removed it [yes/No] ?\n"
 				read rep
