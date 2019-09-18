@@ -47,6 +47,7 @@ dataLibs=("pthread" \
 	"crypto" \
 	"use_DLL" \
 	"create_DLL" \
+	"mosquitto" \
 	)
 dataLibsValues=("-lpthread" \
 	"-lSDL" \
@@ -58,6 +59,7 @@ dataLibsValues=("-lpthread" \
 	"-lcrypto" \
 	"-ldl" \
 	"-shared" \
+	"-lmosquitto" \
 	)
 archTest=("HARD_ARCH" \
 	"MODE" \
