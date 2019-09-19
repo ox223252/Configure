@@ -32,9 +32,11 @@ if [ ! -d $SRC ]; then
 fi
 
 if [ "$isMain" == "" ]; then
+	# if main doesn't exist (or we ask to removed it)
 	touch $SRC/main.c
 
 	echo "// file auto generated" >> $SRC/main.c
+	echo "#include <errno.h>" >> $SRC/main.c
 	echo >> $SRC/main.c
 	echo >> $SRC/main.c
 	echo "// INIT_FUNCTION" >> $SRC/main.c
@@ -49,11 +51,11 @@ if [ "$isMain" == "" ]; then
 	for T1 in ${PATHS[@]}
 	do
 		case $T1 in
-			*:) # directory
+			*:) # get the directory name
 				LAST=$T1
 				LAST=$( echo $T1 | cut -d':' -f1 | rev | cut -d'/' -f2- | rev  )
 				;;
-			*.init|*.head) # file
+			*.init|*.head) # for each file named *.init or *.head
 				printf "$T1 "
 
 				# get content of init
