@@ -362,8 +362,8 @@ OBJ=\$(C_OBJ) \$(CPP_OBJ)
 
 FLAGS+= -DDATE_BUILD=\\\"\\\\\"\$(shell date +'%%Y.%%m.%%d %%H:%%M:%%S')\\\\\"\\\"
 
-CFLAGS+=$(FLAGS)
-CXXFLAGS+=$(FLAGS)
+CFLAGS+= \$(FLAGS)
+CXXFLAGS+= \$(FLAGS)
 
 all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) \$(ROOT_DIR)/\$(OUTFOLDER) exec_after
 	@printf \"+=======================================+\\\\n\"
