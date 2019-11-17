@@ -359,9 +359,12 @@ C_SRC=\$(shell find ./\$(SOURCE_DIR) -name *.c)
 C_OBJ=\$(C_SRC:.c=.o)
 
 OBJ=\$(C_OBJ) \$(CPP_OBJ)
+" >> makefile
 
-FLAGS+= -DDATE_BUILD=\\\"\\\\\"\$(shell date +'%%Y.%%m.%%d %%H:%%M:%%S')\\\\\"\\\"
+# NO idea how to correct this
+#FLAGS+= -DDATE_BUILD=\\\"\\\\\"\$(shell date +'%%Y.%%m.%%d %%H:%%M:%%S')\\\\\"\\\"
 
+printf "
 CFLAGS+= \$(FLAGS)
 CXXFLAGS+= \$(FLAGS)
 
