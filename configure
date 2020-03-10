@@ -367,7 +367,7 @@ printf "
 CFLAGS+= \$(FLAGS)
 CXXFLAGS+= \$(FLAGS)
 
-all: testVar \$(ROOT_DIR)/\$(HARD_ARCH) cible \$(DEPEND) build_dir makedeps \$(ROOT_DIR)/\$(HARD_ARCH)/\$(EXEC) \$(CONFIG) exec_after
+all: testVar \$(DEPEND) \$(ROOT_DIR)/\$(HARD_ARCH) cible build_dir makedeps \$(ROOT_DIR)/\$(HARD_ARCH)/\$(EXEC) \$(CONFIG) exec_after
 	@printf \"+=======================================+\\\\n\"
 	@printf \"|      \\\\033[1;92m%%-22s\\\\033[0m           |\\\\n\" \"Buid done\"
 	@printf \"| for hard_arch : \\\\033[1;92m%%-22s\\\\033[0m|\\\\n\" \"\$(shell file \$(ROOT_DIR)/\$(HARD_ARCH)/\$(EXEC) | cut -d ',' -f2)\"
