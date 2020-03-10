@@ -365,10 +365,10 @@ printf "
 CFLAGS+= \$(FLAGS)
 CXXFLAGS+= \$(FLAGS)
 
-all: testVar \$(ROOT_DIR) cible \$(DEPEND) build_dir makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) exec_after
+all: testVar \$(ROOT_DIR)/\$(HARD_ARCH) cible \$(DEPEND) build_dir makedeps \$(ROOT_DIR)/\$(HARD_ARCH)/\$(EXEC) \$(CONFIG) exec_after
 	@printf \"+=======================================+\\\\n\"
 	@printf \"|      \\\\033[1;92m%%-22s\\\\033[0m           |\\\\n\" \"Buid done\"
-	@printf \"| for hard_arch : \\\\033[1;92m%%-22s\\\\033[0m|\\\\n\" \"\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\"
+	@printf \"| for hard_arch : \\\\033[1;92m%%-22s\\\\033[0m|\\\\n\" \"\$(shell file \$(ROOT_DIR)/\$(HARD_ARCH)/\$(EXEC) | cut -d ',' -f2)\"
 	@printf \"| in mode : \\\\033[1;92m%%-22s\\\\033[0m      |\\\\n\" \"\$(MODE)\"
 	@printf \"+=======================================+\\\\n\"
 
@@ -392,8 +392,8 @@ done
 
 printf "	@echo \"\\\\033[1;92mVar tests valides, continue\\\\033[0m\"
 
-\$(ROOT_DIR):
-	@\$(shell [ -d \"\$(ROOT_DIR)\" ] || mkdir -p \"\$(ROOT_DIR)\" )
+\$(ROOT_DIR)/\$(HARD_ARCH):
+	@mkdir -p \$(ROOT_DIR)/\$(HARD_ARCH)
 
 exec_after:
 	\$(EXEC_AFTER)
@@ -413,7 +413,7 @@ echo >> makefile
 printf "docs:
 	@doxywizard doc/Doxyfile
 
-\$(ROOT_DIR)/\$(EXEC): \$(OBJ)
+\$(ROOT_DIR)/\$(HARD_ARCH)/\$(EXEC): \$(OBJ)
 	\$(CXX) -o \$@ \$^ \$(LDFLAGS)
 
 \$(BUILD_DIR)/\$(HARD_ARCH)/%%.o:./\$(SOURCE_DIR)/%%.c
@@ -434,7 +434,7 @@ cleanDoc:
 	rm -f -r doc/rtf/*
 
 mrproper: clean cleanDoc
-	rm -f \$(ROOT_DIR)/\$(EXEC)
+	rm -rf \$(ROOT_DIR)
 
 empty: mrproper
 	rm -rf ./\$(BUILD_DIR)
