@@ -21,7 +21,7 @@ export NCURSES_NO_UTF8_ACS=1
 
 DIALOG=dialog
 
-VERSION=0.4
+VERSION=0.5
 LICENSE=GPLv2
 GITHUB_PATH=https://github.com/ox223252/Configure
 
@@ -109,8 +109,8 @@ modeType=( "debug" \
 pathType=( "EXEC" \
 	"ROOT_DIR" \
 	"DOC_DIR" \
-	"SOURCE_DIR" \
 	"BUILD_DIR" \
+	"SOURCE_DIR" \
 	"PATCH_DIR" \
 	"RESSOURCES_DIR" \
 	"CONFIG_DIR" \
@@ -119,13 +119,16 @@ pathType=( "EXEC" \
 pathValue=( "exec" \
 	"bin" \
 	"doc" \
-	"src" \
 	"build" \
+	"src" \
 	"patch" \
 	"res" \
 	"$configFolder" \
 	"lib" \
 	)
+saveLast=4 # the lasts elements from the fourth should be save from make empty
+# and the four first should be removed
+
 compilSoft=( "arm-linux-gnueabi-gcc" \
 	"arm-linux-gnueabi-g++" \
 	"arm-linux-gnueabihf-gcc" \
@@ -140,7 +143,6 @@ compilPacket=( "gcc-arm-linux-gnueabi" \
 	"mingw-w64" \
 	"mingw-w64" \
 	)
-saveLast=4
 
 #select default editor if no one configured
 [ "$EDITOR" == "" ] && [ -f /bin/nano ] && EDITOR="nano"
