@@ -108,20 +108,20 @@ modeType=( "debug" \
 	"release" \
 	)
 pathType=( "EXEC" \
-	"OUTFOLDER" \
 	"ROOT_DIR" \
 	"DOC_DIR" \
 	"SOURCE_DIR" \
+	"BUILD_DIR" \
 	"PATCH_DIR" \
 	"RESSOURCES_DIR" \
 	"CONFIG_DIR" \
 	"LIB_DIR" \
 	)
 pathValue=( "exec" \
-	"out" \
 	"bin" \
 	"doc" \
 	"src" \
+	"build" \
 	"patch" \
 	"res" \
 	"$configFolder" \
@@ -237,8 +237,8 @@ configfile="$configFolder/config_path.mk"
 [ ! -f "$configfile" ] && \
 	echo "ROOT_DIR=bin" > $configfile && \
 	echo "EXEC=exec" >> $configfile && \
-	echo "OUTFOLDER=out" >> $configfile && \
 	echo "SOURCE_DIR=src" >> $configfile && \
+	echo "BUILD_DIR=build" >> $configfile && \
 	echo "DOC_DIR=doc" >> $configfile && \
 	echo "PATCH_DIR=patch" >> $configfile && \
 	echo "RESSOURCES_DIR=res" >> $configfile && \
@@ -266,9 +266,9 @@ endif
 ifeq (\$(SOURCE_DIR),)
 	SOURCE_DIR=src
 endif
-# exec folder name
-ifeq (\$(OUTFOLDER),)
-	OUTFOLDER=bin
+# source folder name
+ifeq (\$(BUILD_DIR),)
+	BUILD_DIR=build
 endif
 # exec file name
 ifeq (\$(EXEC),)
@@ -353,22 +353,24 @@ printf "ifeq (\$(FULL_CPP),on)
 endif
 
 CPP_SRC=\$(shell find ./\$(SOURCE_DIR) -name *.cpp)
-CPP_OBJ=\$(CPP_SRC:.cpp=.o)
+CPP_OBJ=\$(patsubst ./\$(SOURCE_DIR)/%%.cpp,./\$(BUILD_DIR)/\$(HARD_ARCH)/%%.o,\$(CPP_SRC))
 
 C_SRC=\$(shell find ./\$(SOURCE_DIR) -name *.c)
-C_OBJ=\$(C_SRC:.c=.o)
+C_OBJ=\$(patsubst ./\$(SOURCE_DIR)/%%.c,./\$(BUILD_DIR)/\$(HARD_ARCH)/%%.o,\$(C_SRC))
 
 OBJ=\$(C_OBJ) \$(CPP_OBJ)
 " >> makefile
 
 # NO idea how to correct this
 #FLAGS+= -DDATE_BUILD=\\\"\\\\\"\$(shell date +'%%Y.%%m.%%d %%H:%%M:%%S')\\\\\"\\\"
+printf "FLAGS+= -I./\$(SOURCE_DIR)
+" >> makefile
 
 printf "
 CFLAGS+= \$(FLAGS)
 CXXFLAGS+= \$(FLAGS)
 
-all: testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) \$(ROOT_DIR)/\$(OUTFOLDER) exec_after
+all: build_dir testVar \$(ROOT_DIR) cible \$(DEPEND) makedeps \$(ROOT_DIR)/\$(EXEC) \$(CONFIG) exec_after
 	@printf \"+=======================================+\\\\n\"
 	@printf \"|      \\\\033[1;92m%%-22s\\\\033[0m           |\\\\n\" \"Buid done\"
 	@printf \"| for hard_arch : \\\\033[1;92m%%-22s\\\\033[0m|\\\\n\" \"\$(shell file \$(ROOT_DIR)/\$(EXEC) | cut -d ',' -f2)\"
@@ -398,9 +400,6 @@ printf "	@echo \"\\\\033[1;92mVar tests valides, continue\\\\033[0m\"
 \$(ROOT_DIR):
 	@\$(shell [ -d \"\$(ROOT_DIR)\" ] || mkdir -p \"\$(ROOT_DIR)\" )
 
-\$(ROOT_DIR)/\$(OUTFOLDER): \$(ROOT_DIR)
-	@\$(shell [ ! -d \"\$(ROOT_DIR)/\$(OUTFOLDER)\" ] && mkdir -p \"\$(ROOT_DIR)/\$(OUTFOLDER)\" )
-
 exec_after:
 	\$(EXEC_AFTER)
 
@@ -422,6 +421,12 @@ printf "docs:
 \$(ROOT_DIR)/\$(EXEC): \$(OBJ)
 	\$(CXX) -o \$@ \$^ \$(LDFLAGS)
 
+\$(BUILD_DIR)/\$(HARD_ARCH)/%%.o:./\$(SOURCE_DIR)/%%.c
+	\$(CC) -o \$@ -c \$^ \$(CFLAGS)
+
+\$(BUILD_DIR)/\$(HARD_ARCH)/%%.o:./\$(SOURCE_DIR)/%%.cpp
+	\$(CXX) -o \$@ -c \$^ \$(CXXFLAGS)
+
 clean:
 	rm -f \$(shell find ./\$(SOURCE_DIR)/ -name *.o) \$(shell find ./\$(SOURCE_DIR)/ -name *.so)
 
@@ -432,10 +437,7 @@ cleanDoc:
 	rm -f -r doc/man/*
 	rm -f -r doc/rtf/*
 
-cleanDump:
-	rm -f -r \$(ROOT_DIR)/\$(OUTFOLDER)/*
-
-mrproper: clean cleanDump cleanDoc
+mrproper: clean cleanDoc
 	rm -f \$(ROOT_DIR)/\$(EXEC)
 
 empty: mrproper
@@ -459,6 +461,9 @@ makedeps:
 
 \$(CONFIG):
 	@[ ! -f \$(CONFIG) ] && echo > \$(CONFIG)
+
+build_dir:
+	for p in \$(shell ls -l -R ./\$(SOURCE_DIR) | grep -E '^\.' | cut -d':' -f1 | cut -d'/' -f3-); do mkdir -p ./\$(BUILD_DIR)/\$(HARD_ARCH)/\$\$p; done
 
 printEnv:
 " >> makefile
