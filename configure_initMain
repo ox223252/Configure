@@ -25,7 +25,9 @@ logDir=false
 
 SRC=$( cat $1/config_path.mk | grep SOURCE_DIR | cut -d'=' -f2 )
 PATHS=$( ls -R $SRC )
-isMain=$( grep -r  -E "( m|^m)ai(n$|n |n\()" $SRC | grep -E "^$SRC/[^:]*\.c(pp)?:" )
+isMain=$( grep -r  -E "( m|^m)ai(n$|n |n\()" $SRC | grep -v -E "__attribute__.*weak" | grep -E "^$SRC/[^:]*\.c(pp)?:" )
+
+echo --$isMain--
 
 if [ ! -d $SRC ]; then
 	mkdir -p $SRC
