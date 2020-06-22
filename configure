@@ -462,6 +462,7 @@ makedeps:
 	@[ ! -f \$(CONFIG) ] && echo > \$(CONFIG)
 
 build_dir:
+	mkdir -p ./\$(BUILD_DIR)/\$(HARD_ARCH);
 	@for p in \$(shell ls -l -R ./\$(SOURCE_DIR) | grep -E '^\.' | cut -d':' -f1 | cut -d'/' -f3-); do mkdir -p ./\$(BUILD_DIR)/\$(HARD_ARCH)/\$\$p; done
 
 printEnv:
