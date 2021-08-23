@@ -364,6 +364,9 @@ OBJ=\$(C_OBJ) \$(CPP_OBJ)
 
 
 printf "
+DATE_BUILD= \$(shell date +%%Y-%%m-%%d/%%H:%%M:%%S)
+FLAGS+= -D'DATE_BUILD=\"\${DATE_BUILD}\"'
+
 CFLAGS+= \$(FLAGS)
 CXXFLAGS+= \$(FLAGS)
 
