@@ -21,7 +21,7 @@ export NCURSES_NO_UTF8_ACS=1
 
 DIALOG=dialog
 
-VERSION=0.5
+VERSION=0.6
 LICENSE=GPLv2
 GITHUB_PATH=https://github.com/ox223252/Configure
 
