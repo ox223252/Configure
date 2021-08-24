@@ -86,6 +86,7 @@ outInfos=( "binary" \
 debugTypes=( "GDB" \
 	"GPROF" \
 	"FULL_CPP" \
+	"CLANG_TIDY" \
 	)
 linkageType=( "dynamic" \
 	"static" \
@@ -149,7 +150,7 @@ compilPacket=( "gcc-arm-linux-gnueabi" \
 [ "$EDITOR" == "" ] && [ -f /usr/bin/vi ] && EDITOR="vi"
 
 #verification de la presence des paquet necessaires et proposition d'installation
-PACKETS=" gcc g++ xutils-dev dialog curl git make"
+PACKETS=" gcc g++ xutils-dev dialog curl git make clang clang-tidy"
 for TMP in $PACKETS
 do
 	dpkg -s $TMP 2> .log 1> /dev/null
@@ -422,9 +423,15 @@ printf "docs:
 	\$(CXX) -o \$@ \$^ \$(LDFLAGS)
 
 \$(BUILD_DIR)/\$(HARD_ARCH)/%%.o:./\$(SOURCE_DIR)/%%.c
+ifeq (\$(CLANG_TIDY),on)
+	clang-tidy \$^ -- \${CFLAGS}
+endif
 	\$(CC) -o \$@ -c \$^ \$(CFLAGS)
 
 \$(BUILD_DIR)/\$(HARD_ARCH)/%%.o:./\$(SOURCE_DIR)/%%.cpp
+ifeq (\$(CLANG_TIDY),on)
+	clang-tidy \$^ -- \${CXXFLAGS}
+endif
 	\$(CXX) -o \$@ -c \$^ \$(CXXFLAGS)
 
 clean: testVar
@@ -467,6 +474,9 @@ makedeps:
 build_dir:
 	mkdir -p ./\$(BUILD_DIR)/\$(HARD_ARCH);
 	@for p in \$(shell ls -l -R ./\$(SOURCE_DIR) | grep -E '^\.' | cut -d':' -f1 | cut -d'/' -f3-); do mkdir -p ./\$(BUILD_DIR)/\$(HARD_ARCH)/\$\$p; done
+
+check:
+	clang-tidy \${C_SRC} \${CPP_SRC} -- \${FLAGS}
 
 printEnv:
 " >> makefile
