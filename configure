@@ -134,6 +134,10 @@ compilSoft=( "arm-linux-gnueabi-gcc" \
 	"arm-linux-gnueabi-g++" \
 	"arm-linux-gnueabihf-gcc" \
 	"arm-linux-gnueabihf-g++" \
+	"arm-none-gnueabi-gcc" \
+	"arm-none-gnueabi-g++" \
+	"arm-none-gnueabihf-gcc" \
+	"arm-none-gnueabihf-g++" \
 	"i686-w64-mingw32-gcc" \
 	"i686-w64-mingw32-g++" \
 	)
@@ -141,6 +145,10 @@ compilPacket=( "gcc-arm-linux-gnueabi" \
 	"g++-arm-linux-gnueabi" \
 	"gcc-arm-linux-gnueabihf" \
 	"g++-arm-linux-gnueabihf" \
+	"gcc-arm-none-gnueabi" \
+	"g++-arm-none-gnueabi" \
+	"gcc-arm-none-gnueabihf" \
+	"g++-arm-none-gnueabihf" \
 	"mingw-w64" \
 	"mingw-w64" \
 	)
