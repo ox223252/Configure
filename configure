@@ -463,6 +463,7 @@ cleanDoc:
 
 mrproper: clean cleanDoc
 	rm -rf \$(ROOT_DIR)
+	rm -rf ./\$(BUILD_DIR)
 
 empty: mrproper
 	rm -rf ./\$(BUILD_DIR)
