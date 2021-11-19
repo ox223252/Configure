@@ -368,10 +368,14 @@ printf "ifeq (\$(FULL_CPP),on)
 	CC=\$(CXX)
 endif
 
-CPP_SRC=\$(shell find ./\$(SOURCE_DIR) -name '*.cpp')
-CPP_OBJ=\$(patsubst ./\$(SOURCE_DIR)/%%.cpp,./\$(BUILD_DIR)/\$(HARD_ARCH)/%%.o,\$(CPP_SRC))
+ifeq (\$(strip \$(CPP_SRC)),)
+	CPP_SRC=\$(shell find ./\$(SOURCE_DIR) -name '*.cpp')
+endif
+CPP_OBJ=\$(patsubst ./\$(SOURCE_DIR)/%%.cpp,./\$(BUILD_DIR)/\$(HARD_ARCH)/%%.o, \$(CPP_SRC) )
 
-C_SRC=\$(shell find ./\$(SOURCE_DIR) -name '*.c')
+ifeq (\$(strip \$(C_SRC)),)
+	C_SRC=\$(shell find ./\$(SOURCE_DIR) -name '*.c')
+endif
 C_OBJ=\$(patsubst ./\$(SOURCE_DIR)/%%.c,./\$(BUILD_DIR)/\$(HARD_ARCH)/%%.o,\$(C_SRC))
 
 OBJ=\$(C_OBJ) \$(CPP_OBJ)
